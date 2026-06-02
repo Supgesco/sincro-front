@@ -78,23 +78,25 @@ function EquipeCard({ equipe, onClick }: { equipe: typeof equipesData[0]; onClic
   return (
     <div
       onClick={onClick}
-      className="w-full flex flex-col justify-between gap-2 p-3.5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] text-white shadow-lg"
       style={{
-        background: "linear-gradient(90deg, #5A3E99 0%, #7653E8 100%)",
+        color: "var(--sincro-team-card-text)",
         minHeight: "110px",
       }}
+      className="bg-sincro-team-card w-full flex flex-col justify-between gap-2 p-3.5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
     >
       {/* TOPO: Nome + Gestor */}
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-bold text-white leading-tight">{equipe.nome}</h2>
-        <p className="text-xs text-white/80 flex items-center gap-1.5">
+        <h2 className="text-lg font-bold leading-tight" style={{ color: "var(--sincro-team-card-text)" }}>
+          {equipe.nome}
+        </h2>
+        <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--sincro-team-card-text-muted)" }}>
           <User className="w-3.5 h-3.5" />
           Gestor: {equipe.gestor}
         </p>
       </div>
 
       {/* MEIO: Indicadores (mesma linha) */}
-      <div className="flex items-center justify-between gap-2 text-[11px] text-white/90">
+      <div className="flex items-center justify-between gap-2 text-[11px]" style={{ color: "var(--sincro-team-card-text-muted)" }}>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-status-green shrink-0" />
           {equipe.projetosAtivos} Projetos
@@ -111,14 +113,20 @@ function EquipeCard({ equipe, onClick }: { equipe: typeof equipesData[0]; onClic
 
       {/* INFERIOR: Membros */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Membros:</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--sincro-team-card-text-soft)" }}>
+          Membros:
+        </p>
         <div className="flex items-center -space-x-1.5">
           {Array.from({ length: equipe.numMembros }).map((_, idx) => (
             <div
               key={idx}
-              className="w-6 h-6 rounded-full border-2 border-white/40 flex items-center justify-center bg-white/25"
+              className="w-6 h-6 rounded-full border-2 flex items-center justify-center"
+              style={{
+                borderColor: "var(--sincro-team-card-avatar-border)",
+                backgroundColor: "var(--sincro-team-card-avatar-bg)",
+              }}
             >
-              <User className="w-3 h-3 text-white" />
+              <User className="w-3 h-3" style={{ color: "var(--sincro-team-card-text)" }} />
             </div>
           ))}
         </div>

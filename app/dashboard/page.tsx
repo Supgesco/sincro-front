@@ -152,6 +152,11 @@ export default function DashboardPage() {
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Finalizado" } : prev)
   }
 
+  const handleReabrirTarefa = (id: number) => {
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
+    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
+  }
+
   const diasAgenda: DiaAgenda[] = Array.from({ length: 14 }, (_, i) => {
     const date = addDays(semanaInicio, i)
     return {
@@ -395,6 +400,7 @@ export default function DashboardPage() {
           }}
           onIniciar={() => handleIniciarTarefa(selectedTarefa.id)}
           onFinalizar={() => handleFinalizarTarefa(selectedTarefa.id)}
+          onReabrir={() => handleReabrirTarefa(selectedTarefa.id)}
           onSave={(tarefaAtualizada) => {
             setTarefas(prev => prev.map(t => t.id === tarefaAtualizada.id ? { ...t, ...tarefaAtualizada } : t))
             setSelectedTarefa(tarefaAtualizada)

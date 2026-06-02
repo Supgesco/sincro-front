@@ -96,6 +96,11 @@ function TarefasContent() {
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Finalizado" } : prev)
   }
 
+  const handleReabrirTarefa = (id: number) => {
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
+    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
+  }
+
   const totalTarefas = tarefas.length
   const tarefasConcluidas = tarefas.filter(t => t.status === "Finalizado").length
   const tarefasProgresso = tarefas.filter(t => t.status === "Em Andamento").length
@@ -276,6 +281,7 @@ function TarefasContent() {
           onAceitar={() => handleAceitarTarefa(selectedTarefa.id)}
           onIniciar={() => handleIniciarTarefa(selectedTarefa.id)}
           onFinalizar={() => handleFinalizarTarefa(selectedTarefa.id)}
+          onReabrir={() => handleReabrirTarefa(selectedTarefa.id)}
         />
       )}
     </div>

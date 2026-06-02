@@ -64,6 +64,16 @@
   --status-orange-bg: rgba(230, 126, 34, 0.15);
   --status-yellow: #EAB308;
   --status-yellow-bg: rgba(234, 179, 8, 0.15);
+
+  /* Team card (theme-aware) */
+  --sincro-team-card-from: #FFFFFF;
+  --sincro-team-card-to: #EFEAF5;
+  --sincro-team-card-text: #1B1340;
+  --sincro-team-card-text-muted: #3D3566;
+  --sincro-team-card-text-soft: #5C5480;
+  --sincro-team-card-avatar-bg: rgba(45, 36, 87, 0.08);
+  --sincro-team-card-avatar-border: rgba(45, 36, 87, 0.2);
+  --sincro-team-card-accent: #7A5BEF;
 }
 
 .dark {
@@ -127,6 +137,16 @@
   --status-orange-bg: rgba(230, 126, 34, 0.2);
   --status-yellow: #F1C40F;
   --status-yellow-bg: rgba(241, 196, 15, 0.2);
+
+  /* Team card (theme-aware) */
+  --sincro-team-card-from: #5A3E99;
+  --sincro-team-card-to: #7653E8;
+  --sincro-team-card-text: #FFFFFF;
+  --sincro-team-card-text-muted: rgba(255, 255, 255, 0.85);
+  --sincro-team-card-text-soft: rgba(255, 255, 255, 0.7);
+  --sincro-team-card-avatar-bg: rgba(255, 255, 255, 0.25);
+  --sincro-team-card-avatar-border: rgba(255, 255, 255, 0.4);
+  --sincro-team-card-accent: #A78BFA;
 }
 
 @theme inline {
@@ -211,4 +231,8 @@
   background:
     linear-gradient(rgba(0, 0, 20, 0.2), rgba(0, 0, 0, 0.2)),
     linear-gradient(to bottom, #3A2962, #7755C8);
+}
+
+@utility bg-sincro-team-card {
+  background: linear-gradient(135deg, var(--sincro-team-card-from) 0%, var(--sincro-team-card-to) 100%);
 }
