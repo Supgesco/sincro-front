@@ -1,8 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Modal } from "@/components/modal"
-import { User, Calendar, Pencil, X, Check, Filter, Play, Send, RotateCcw } from "lucide-react"
+import { User, Calendar, Pencil, X, Check, Filter, Play, Send, RotateCcw, Plus, Users, Flag, Sparkles, AlertCircle, ListChecks } from "lucide-react"
+
+const statusBadgeTarefa: Record<string, string> = {
+  "Em Andamento": "bg-status-cyan text-white",
+  "Em Atraso": "bg-status-red text-white",
+  "Finalizado": "bg-status-green text-white",
+  "Concluído": "bg-status-green text-white",
+  "Não Iniciado": "bg-sincro-text-secondary/40 text-sincro-text-primary",
+}
+
+const COMPLEXIDADE_OPCOES = [
+  { value: "Baixa Complexidade", label: "Baixa", color: "bg-status-green-bg text-status-green" },
+  { value: "Média Complexidade", label: "Média", color: "bg-status-yellow-bg text-status-yellow" },
+  { value: "Alta Complexidade", label: "Alta", color: "bg-status-red-bg text-status-red" },
+] as const
+
+const PROJETOS_DISPONIVEIS = [
+  "Projeto Alpha", "Projeto Beta", "Projeto Gama",
+  "Projeto Delta", "Projeto Epsilon", "Projeto Zeta",
+]
+
+const MEMBROS_DISPONIVEIS = [
+  "Pessoa 1", "Pessoa 2", "Pessoa 3", "Pessoa 4", "Pessoa 5",
+]
 
 interface Tarefa {
   id: number
@@ -167,7 +190,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   <option value="Em Atraso">Em Atraso</option>
                 </select>
               ) : (
-                <span className="px-3 py-1 rounded-full bg-status-cyan text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeTarefa[tarefa.status] ?? "bg-status-cyan text-white"}`}>
                   {tarefa.status}
                 </span>
               )}
@@ -555,5 +578,368 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
         </div>
       </div>
     </Modal>
+  )
+}
+
+interface CriarTarefaModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onCriar?: (tarefa: Partial<Tarefa> & { projeto?: string; membros?: string[]; dataEntregaISO?: string }) => void
+}
+
+export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalProps) {
+  const [nome, setNome] = useState("")
+  const [descricao, setDescricao] = useState("")
+  const [projeto, setProjeto] = useState(PROJETOS_DISPONIVEIS[0])
+  const [membros, setMembros] = useState<string[]>([])
+  const [status, setStatus] = useState("Não Iniciado")
+  const [dataEntrega, setDataEntrega] = useState("")
+  const [complexidade, setComplexidade] = useState<string>("Média Complexidade")
+  const [urgente, setUrgente] = useState(false)
+  const [touched, setTouched] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setNome("")
+      setDescricao("")
+      setProjeto(PROJETOS_DISPONIVEIS[0])
+      setMembros([])
+      setStatus("Não Iniciado")
+      setDataEntrega("")
+      setComplexidade("Média Complexidade")
+      setUrgente(false)
+      setTouched(false)
+    }
+  }, [isOpen])
+
+  const nomeInvalido = touched && !nome.trim()
+  const dataInvalida = touched && dataEntrega && new Date(dataEntrega) < new Date(new Date().toISOString().slice(0, 10))
+
+  const toggleMembro = (m: string) => {
+    setMembros(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setTouched(true)
+    if (!nome.trim() || dataInvalida) return
+    onCriar?.({
+      nome: nome.trim(),
+      descricao,
+      projeto,
+      membros,
+      status,
+      complexidade,
+      urgente,
+      dataEntregaISO: dataEntrega,
+    })
+    onClose()
+  }
+
+  const formatarDataBR = (iso: string) => {
+    if (!iso) return ""
+    const [y, m, d] = iso.split("-")
+    return `${d}/${m}/${y}`
+  }
+
+  const complexidadeOpcao = COMPLEXIDADE_OPCOES.find(o => o.value === complexidade)!
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      hideClose
+      className="w-[min(960px,92vw)] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl"
+    >
+      <div className="flex flex-col text-sincro-modal-text flex-1 min-h-0 bg-sincro-modal-bg dark:bg-sincro-dark-gradient">
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between gap-4 px-7 py-5 border-b border-sincro-border shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-status-green-bg text-status-green shrink-0">
+              <ListChecks className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-extrabold leading-tight">Criar Nova Tarefa</h2>
+              <p className="text-xs text-sincro-text-secondary mt-0.5">Defina o que precisa ser feito</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full transition-colors hover:bg-black/10 dark:hover:bg-white/10 text-sincro-modal-text shrink-0"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row flex-1 min-h-0">
+          {/* Coluna esquerda — formulário */}
+          <div className="flex-1 p-7 flex flex-col gap-5 overflow-y-auto border-b lg:border-b-0 lg:border-r border-sincro-border">
+            {/* Nome */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                Nome da Tarefa <span className="text-status-red">*</span>
+              </label>
+              <input
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Ex.: Atualizar documentação da API"
+                className={`w-full h-11 px-4 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none transition-colors ${nomeInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
+                autoFocus
+              />
+              {nomeInvalido && (
+                <p className="text-[11px] text-status-red mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Informe um nome para a tarefa.
+                </p>
+              )}
+            </div>
+
+            {/* Descrição */}
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                Descrição
+              </label>
+              <textarea
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={3}
+                placeholder="Detalhe o que precisa ser feito e o critério de aceite..."
+                className="w-full px-4 py-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none focus:border-sincro-text-muted resize-none transition-colors"
+              />
+            </div>
+
+            {/* Projeto + Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Flag className="w-3 h-3" /> Projeto
+                </label>
+                <select
+                  value={projeto}
+                  onChange={(e) => setProjeto(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                >
+                  {PROJETOS_DISPONIVEIS.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Flag className="w-3 h-3" /> Status Inicial
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                >
+                  <option value="Não Iniciado">Não Iniciado</option>
+                  <option value="Em Andamento">Em Andamento</option>
+                  <option value="Em Atraso">Em Atraso</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Data de Entrega + Complexidade */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Calendar className="w-3 h-3" /> Data de Entrega
+                </label>
+                <input
+                  type="date"
+                  value={dataEntrega}
+                  onChange={(e) => setDataEntrega(e.target.value)}
+                  className={`w-full h-11 px-3 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none transition-colors ${dataInvalida ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
+                />
+                {dataInvalida && (
+                  <p className="text-[11px] text-status-red mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> A data deve ser futura.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Sparkles className="w-3 h-3" /> Complexidade
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {COMPLEXIDADE_OPCOES.map((op) => {
+                    const ativo = op.value === complexidade
+                    return (
+                      <button
+                        key={op.value}
+                        type="button"
+                        onClick={() => setComplexidade(op.value)}
+                        className={`h-11 rounded-xl border text-xs font-extrabold transition-all ${ativo ? `${op.color} border-transparent` : "border-sincro-border bg-sincro-bg-input text-sincro-text-secondary hover:bg-black/5 dark:hover:bg-white/5"}`}
+                      >
+                        {op.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Membros (multi-select) */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                <Users className="w-3 h-3" /> Membros Responsáveis
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {MEMBROS_DISPONIVEIS.map((m) => {
+                  const ativo = membros.includes(m)
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => toggleMembro(m)}
+                      className={`h-9 px-3 rounded-full border text-xs font-bold transition-all ${ativo ? "bg-status-cyan-bg text-status-cyan border-status-cyan" : "border-sincro-border bg-sincro-bg-input text-sincro-text-secondary hover:bg-black/5 dark:hover:bg-white/5"}`}
+                    >
+                      {m}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Toggle: Urgente */}
+            <TarefaToggle
+              checked={urgente}
+              onChange={setUrgente}
+              label="Marcar como urgente"
+              description="Tarefa com prazo apertado ou prioridade alta."
+            />
+          </div>
+
+          {/* Coluna direita — preview */}
+          <div className="w-full lg:w-[320px] p-7 flex flex-col gap-4 bg-sincro-modal-sidebar overflow-y-auto">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">
+              <Sparkles className="w-3 h-3" /> Pré-visualização
+            </div>
+
+            <div className="rounded-2xl border border-sincro-border bg-sincro-modal-bg p-4 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-extrabold text-base text-sincro-modal-text leading-tight break-words min-w-0">
+                  {nome.trim() || "Nome da Tarefa"}
+                </h3>
+                <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold ${statusBadgeTarefa[status] ?? "bg-status-cyan text-white"}`}>
+                  {status}
+                </span>
+              </div>
+
+              {descricao ? (
+                <p className="text-xs text-sincro-text-secondary line-clamp-3">{descricao}</p>
+              ) : (
+                <p className="text-xs text-sincro-text-muted italic">Sem descrição</p>
+              )}
+
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-sincro-border">
+                <PreviewRowTarefa icon={Flag} label="Projeto" value={projeto} />
+                <PreviewRowTarefa icon={Calendar} label="Entrega" value={formatarDataBR(dataEntrega) || "—"} />
+                <PreviewRowTarefa
+                  icon={Sparkles}
+                  label="Complexidade"
+                  value={complexidadeOpcao.value.replace(" Complexidade", "")}
+                />
+              </div>
+
+              {membros.length > 0 && (
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-sincro-border">
+                  <span className="text-[11px] text-sincro-text-secondary font-semibold flex items-center gap-1.5">
+                    <Users className="w-3 h-3" /> {membros.length} {membros.length === 1 ? "membro" : "membros"}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {membros.map((m) => (
+                      <span key={m} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sincro-bg-accent text-sincro-text-primary">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {urgente && (
+                <div className="pt-2 border-t border-sincro-border">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-red-bg text-status-red uppercase tracking-wider">
+                    <AlertCircle className="w-3 h-3" /> Urgente
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-sincro-border bg-sincro-modal-bg p-4 flex flex-col gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Dicas</p>
+              <ul className="text-xs text-sincro-text-secondary flex flex-col gap-1.5 list-disc pl-4">
+                <li>Seja específico no nome da tarefa.</li>
+                <li>Defina o critério de aceite na descrição.</li>
+                <li>Adicione os responsáveis para acompanhamento.</li>
+              </ul>
+            </div>
+          </div>
+        </form>
+
+        {/* Rodapé */}
+        <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-sincro-border shrink-0 bg-sincro-modal-sidebar">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 px-5 rounded-full border border-sincro-border text-sincro-modal-text text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="h-10 px-5 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Criar Tarefa
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+function PreviewRowTarefa({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <Icon className="w-3 h-3 text-sincro-text-muted shrink-0" />
+      <span className="text-sincro-text-secondary font-semibold shrink-0">{label}:</span>
+      <span className="text-sincro-modal-text font-bold truncate">{value}</span>
+    </div>
+  )
+}
+
+function TarefaToggle({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label: string
+  description: string
+}) {
+  const ringClass = checked ? "bg-status-red" : "bg-sincro-text-muted/40"
+  const dotClass = checked ? "translate-x-5" : "translate-x-0"
+  return (
+    <label className="flex items-center gap-3 p-3 rounded-xl border border-sincro-border bg-sincro-modal-bg cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+      <div
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${ringClass}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${dotClass}`} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-sincro-modal-text">{label}</p>
+        <p className="text-[11px] text-sincro-text-secondary mt-0.5">{description}</p>
+      </div>
+    </label>
   )
 }

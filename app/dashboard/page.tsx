@@ -236,11 +236,10 @@ export default function DashboardPage() {
                           </span>
                         )}
                         <span>{tarefa.data}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] text-white font-bold ${
-                          tarefa.status === "Finalizado" ? "bg-status-green" :
-                          tarefa.status === "Em Andamento" ? "bg-status-cyan" :
-                          tarefa.status === "Em Atraso" ? "bg-status-red" : "bg-sincro-text-secondary/40"
-                        }`}>{tarefa.status}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] text-white font-bold ${tarefa.status === "Finalizado" ? "bg-status-green" :
+                            tarefa.status === "Em Andamento" ? "bg-status-cyan" :
+                              tarefa.status === "Em Atraso" ? "bg-status-red" : "bg-sincro-text-secondary/40"
+                          }`}>{tarefa.status}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-3">
@@ -300,11 +299,10 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={index}
-                      className={`border rounded-xl p-2 min-h-[80px] ${
-                        isHoje
+                      className={`border rounded-xl p-2 min-h-[80px] ${isHoje
                           ? "border-status-cyan bg-status-cyan/10"
                           : "border-sincro-border bg-white/5"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-1">
                         <span className={`text-xs font-bold ${isHoje ? "text-status-cyan" : "text-sincro-text-primary"}`}>

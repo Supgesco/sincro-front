@@ -2,7 +2,38 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "./modal"
-import { User, X } from "lucide-react"
+import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check } from "lucide-react"
+
+const statusCorProjeto: Record<string, string> = {
+  "Em Andamento": "text-status-cyan",
+  "Em Atraso": "text-status-red",
+  "Concluído": "text-status-green",
+  "Finalizado": "text-status-green",
+  "Não Iniciado": "text-sincro-text-secondary",
+  "Suspenso": "text-status-yellow",
+  "Em Planejamento": "text-status-orange",
+}
+
+const statusBadgeProjeto: Record<string, string> = {
+  "Em Andamento": "bg-status-cyan text-white",
+  "Em Atraso": "bg-status-red text-white",
+  "Concluído": "bg-status-green text-white",
+  "Finalizado": "bg-status-green text-white",
+  "Não Iniciado": "bg-sincro-text-secondary/40 text-sincro-text-primary",
+  "Suspenso": "bg-status-yellow text-[#583f99]",
+  "Em Planejamento": "bg-status-orange text-white",
+}
+
+const COMPLEXIDADE_LABEL: Record<number, string> = {
+  1: "Muito Simples", 2: "Simples", 3: "Simples", 4: "Moderada",
+  5: "Moderada", 6: "Moderada", 7: "Complexa", 8: "Complexa",
+  9: "Muito Complexa", 10: "Muito Complexa",
+}
+
+const EQUIPES = [
+  "Equipe Alpha", "Equipe Dev", "Equipe QA", "Equipe Marketing",
+  "Equipe Design", "Equipe Ops", "Equipe Dados", "Equipe Suporte", "Equipe RH",
+]
 
 interface Projeto {
   id: number
@@ -148,11 +179,14 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                   >
                     <option value="Em Planejamento">Em Planejamento</option>
                     <option value="Em Andamento">Em Andamento</option>
+                    <option value="Em Atraso">Em Atraso</option>
                     <option value="Concluído">Concluído</option>
+                    <option value="Finalizado">Finalizado</option>
+                    <option value="Não Iniciado">Não Iniciado</option>
                     <option value="Suspenso">Suspenso</option>
                   </select>
                 ) : (
-                  <span className="text-status-cyan font-bold">{projeto.status}</span>
+                  <span className={`font-bold ${statusCorProjeto[projeto.status] ?? "text-status-cyan"}`}>{projeto.status}</span>
                 )}
               </p>
             </div>
@@ -344,99 +378,364 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
 interface CriarProjetoModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (projeto: Partial<Projeto>) => void
+  onCriar?: (projeto: Partial<Projeto> & { equipe?: string; dataInicio?: string; prazo?: string; importante?: boolean }) => void
 }
 
 export function CriarProjetoModal({ isOpen, onClose, onCriar }: CriarProjetoModalProps) {
   const [titulo, setTitulo] = useState("")
   const [descricao, setDescricao] = useState("")
-  const [urgente, setUrgente] = useState(false)
+  const [equipe, setEquipe] = useState(EQUIPES[0])
+  const [status, setStatus] = useState("Em Planejamento")
+  const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 10))
+  const [prazo, setPrazo] = useState("")
   const [complexidade, setComplexidade] = useState(5)
+  const [urgente, setUrgente] = useState(false)
+  const [importante, setImportante] = useState(false)
+  const [touched, setTouched] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitulo("")
+      setDescricao("")
+      setEquipe(EQUIPES[0])
+      setStatus("Em Planejamento")
+      setDataInicio(new Date().toISOString().slice(0, 10))
+      setPrazo("")
+      setComplexidade(5)
+      setUrgente(false)
+      setImportante(false)
+      setTouched(false)
+    }
+  }, [isOpen])
+
+  const tituloInvalido = touched && !titulo.trim()
+  const prazoInvalido = touched && prazo && dataInicio && new Date(prazo) < new Date(dataInicio)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setTouched(true)
+    if (!titulo.trim() || prazoInvalido) return
     onCriar?.({
-      titulo,
+      titulo: titulo.trim(),
       descricao,
-      urgente,
+      equipe,
+      status,
+      dataInicio,
+      prazo,
       complexidade,
+      urgente,
+      importante,
     })
     onClose()
   }
 
+  const formatarDataBR = (iso: string) => {
+    if (!iso) return ""
+    const [y, m, d] = iso.split("-")
+    return `${d}/${m}/${y}`
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="p-6 text-sincro-modal-text">
-        <h2 className="text-2xl font-bold mb-6">Criar Novo Projeto</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Título do Projeto</label>
-            <input
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-sincro-border bg-sincro-bg-input"
-              placeholder="Digite o título..."
-              required
-            />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      hideClose
+      className="w-[min(960px,92vw)] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl"
+    >
+      <div className="flex flex-col text-sincro-modal-text flex-1 min-h-0 bg-sincro-modal-bg dark:bg-sincro-dark-gradient">
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between gap-4 px-7 py-5 border-b border-sincro-border shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-status-green-bg text-status-green shrink-0">
+              <FolderPlus className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-extrabold leading-tight">Criar Novo Projeto</h2>
+              <p className="text-xs text-sincro-text-secondary mt-0.5">Defina as informações iniciais do projeto</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full transition-colors hover:bg-black/10 dark:hover:bg-white/10 text-sincro-modal-text shrink-0"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Descrição</label>
-            <textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              rows={4}
-              className="w-full px-4 py-3 rounded-lg border border-sincro-border bg-sincro-bg-input resize-none"
-              placeholder="Descreva o projeto..."
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row flex-1 min-h-0">
+          {/* Coluna esquerda — formulário */}
+          <div className="flex-1 p-7 flex flex-col gap-5 overflow-y-auto border-b lg:border-b-0 lg:border-r border-sincro-border">
+            {/* Título */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                Título do Projeto <span className="text-status-red">*</span>
+              </label>
+              <input
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Ex.: Migração para Cloud"
+                className={`w-full h-11 px-4 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none transition-colors ${tituloInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
+                autoFocus
+              />
+              {tituloInvalido && (
+                <p className="text-[11px] text-status-red mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Informe um título para o projeto.
+                </p>
+              )}
+            </div>
 
-          <div className="flex gap-6">
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">Complexidade (1-10)</label>
+            {/* Descrição */}
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                Descrição
+              </label>
+              <textarea
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                rows={3}
+                placeholder="Descreva os objetivos e o escopo do projeto..."
+                className="w-full px-4 py-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none focus:border-sincro-text-muted resize-none transition-colors"
+              />
+            </div>
+
+            {/* Equipe + Status */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Users className="w-3 h-3" /> Equipe Responsável
+                </label>
+                <select
+                  value={equipe}
+                  onChange={(e) => setEquipe(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                >
+                  {EQUIPES.map((eq) => (
+                    <option key={eq} value={eq}>{eq}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Flag className="w-3 h-3" /> Status Inicial
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                >
+                  <option value="Em Planejamento">Em Planejamento</option>
+                  <option value="Não Iniciado">Não Iniciado</option>
+                  <option value="Em Andamento">Em Andamento</option>
+                  <option value="Em Atraso">Em Atraso</option>
+                  <option value="Suspenso">Suspenso</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Datas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Calendar className="w-3 h-3" /> Data de Início
+                </label>
+                <input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  <Calendar className="w-3 h-3" /> Prazo de Entrega
+                </label>
+                <input
+                  type="date"
+                  value={prazo}
+                  onChange={(e) => setPrazo(e.target.value)}
+                  className={`w-full h-11 px-3 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none transition-colors ${prazoInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
+                />
+                {prazoInvalido && (
+                  <p className="text-[11px] text-status-red mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> O prazo deve ser após a data de início.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Complexidade */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">
+                  Complexidade
+                </label>
+                <span className="text-xs font-extrabold text-sincro-modal-text">
+                  {complexidade}/10 · <span className="text-sincro-text-secondary font-semibold">{COMPLEXIDADE_LABEL[complexidade]}</span>
+                </span>
+              </div>
               <input
                 type="range"
                 min="1"
                 max="10"
                 value={complexidade}
                 onChange={(e) => setComplexidade(Number(e.target.value))}
-                className="w-full"
+                className="w-full accent-status-green cursor-pointer"
               />
-              <span className="text-sm">{complexidade}/10</span>
+              <div className="flex justify-between text-[10px] text-sincro-text-muted mt-1">
+                <span>Simples</span>
+                <span>Moderada</span>
+                <span>Complexa</span>
+              </div>
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={urgente}
-                  onChange={(e) => setUrgente(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm font-medium">Urgente</span>
-              </label>
+            {/* Toggles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <ToggleSwitch
+                checked={urgente}
+                onChange={setUrgente}
+                label="Urgente"
+                description="Marque para projetos com prazo apertado."
+                color="red"
+              />
+              <ToggleSwitch
+                checked={importante}
+                onChange={setImportante}
+                label="Importante"
+                description="Destaca o projeto na listagem."
+                color="yellow"
+              />
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 rounded-full border border-sincro-border text-sincro-modal-text text-sm font-medium hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 rounded-full bg-status-green text-white text-sm font-medium hover:brightness-110 transition-colors"
-            >
-              Criar Projeto
-            </button>
+          {/* Coluna direita — preview */}
+          <div className="w-full lg:w-[320px] p-7 flex flex-col gap-4 bg-sincro-modal-sidebar overflow-y-auto">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">
+              <Sparkles className="w-3 h-3" /> Pré-visualização
+            </div>
+
+            <div className="rounded-2xl border border-sincro-border bg-sincro-modal-bg p-4 flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-extrabold text-base text-sincro-modal-text leading-tight break-words min-w-0">
+                  {titulo.trim() || "Título do Projeto"}
+                </h3>
+                <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold ${statusBadgeProjeto[status]}`}>
+                  {status}
+                </span>
+              </div>
+
+              {descricao ? (
+                <p className="text-xs text-sincro-text-secondary line-clamp-3">{descricao}</p>
+              ) : (
+                <p className="text-xs text-sincro-text-muted italic">Sem descrição</p>
+              )}
+
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-sincro-border">
+                <PreviewRow icon={Users} label="Equipe" value={equipe} />
+                <PreviewRow icon={Calendar} label="Início" value={formatarDataBR(dataInicio) || "—"} />
+                <PreviewRow icon={Calendar} label="Prazo" value={formatarDataBR(prazo) || "—"} />
+                <PreviewRow
+                  icon={Flag}
+                  label="Complexidade"
+                  value={`${complexidade}/10 · ${COMPLEXIDADE_LABEL[complexidade]}`}
+                />
+              </div>
+
+              {(urgente || importante) && (
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-sincro-border">
+                  {urgente && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-red-bg text-status-red uppercase tracking-wider">
+                      <AlertCircle className="w-3 h-3" /> Urgente
+                    </span>
+                  )}
+                  {importante && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-status-yellow-bg text-status-yellow uppercase tracking-wider">
+                      <Sparkles className="w-3 h-3" /> Importante
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-sincro-border bg-sincro-modal-bg p-4 flex flex-col gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Dicas</p>
+              <ul className="text-xs text-sincro-text-secondary flex flex-col gap-1.5 list-disc pl-4">
+                <li>Use um título claro e objetivo.</li>
+                <li>Defina o prazo realista para a equipe.</li>
+                <li>Marque como urgente apenas o que for crítico.</li>
+              </ul>
+            </div>
           </div>
         </form>
+
+        {/* Rodapé */}
+        <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-sincro-border shrink-0 bg-sincro-modal-sidebar">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 px-5 rounded-full border border-sincro-border text-sincro-modal-text text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="h-10 px-5 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Criar Projeto
+          </button>
+        </div>
       </div>
     </Modal>
+  )
+}
+
+function PreviewRow({ icon: Icon, label, value }: { icon: typeof User; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <Icon className="w-3 h-3 text-sincro-text-muted shrink-0" />
+      <span className="text-sincro-text-secondary font-semibold shrink-0">{label}:</span>
+      <span className="text-sincro-modal-text font-bold truncate">{value}</span>
+    </div>
+  )
+}
+
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+  description,
+  color,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label: string
+  description: string
+  color: "red" | "yellow"
+}) {
+  const ringClass = checked
+    ? color === "red"
+      ? "bg-status-red"
+      : "bg-status-yellow"
+    : "bg-sincro-text-muted/40"
+  const dotClass = checked ? "translate-x-5" : "translate-x-0"
+  return (
+    <label className="flex items-center gap-3 p-3 rounded-xl border border-sincro-border bg-sincro-modal-bg cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+      <div
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${ringClass}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${dotClass}`} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-sincro-modal-text">{label}</p>
+        <p className="text-[11px] text-sincro-text-secondary mt-0.5">{description}</p>
+      </div>
+    </label>
   )
 }
