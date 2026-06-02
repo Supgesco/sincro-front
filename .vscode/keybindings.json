@@ -1,0 +1,12 @@
+[
+  {
+    "key": "f5",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Compilar e Executar Java"
+  },
+  {
+    "key": "ctrl+alt+j",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Compilar e Executar Java"
+  }
+]

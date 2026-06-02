@@ -1,0 +1,33 @@
+{
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "ComecePorAqui",
+            "request": "launch",
+            "mainClass": "EstudoJava.ComecePorAqui",
+            "projectName": "Sicro_6ac8b076"
+        },
+        {
+            "type": "java",
+            "name": "ComecePorAqui",
+            "request": "launch",
+            "mainClass": "ComecePorAqui",
+            "projectName": "Sicro_6ac8b076"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "Sicro_6ac8b076"
+        },
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        }
+    ]
+}

@@ -1,0 +1,214 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #F5F3F8;
+  --foreground: #1B1340;
+  --card: #FFFFFF;
+  --card-foreground: #1B1340;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B1340;
+  --primary: #2D2457;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EFEAF5;
+  --secondary-foreground: #1B1340;
+  --muted: #F5F3F8;
+  --muted-foreground: #5C5480;
+  --accent: #EFEAF5;
+  --accent-foreground: #2D2457;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(45, 36, 87, 0.18);
+  --input: rgba(45, 36, 87, 0.1);
+  --ring: #583f99;
+  --chart-1: #06B6D4;
+  --chart-2: #22C55E;
+  --chart-3: #EAB308;
+  --chart-4: #E67E22;
+  --chart-5: #EF4444;
+  --radius: 0.75rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1B1340;
+  --sidebar-primary: #2D2457;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EFEAF5;
+  --sidebar-accent-foreground: #2D2457;
+  --sidebar-border: rgba(45, 36, 87, 0.18);
+  --sidebar-ring: #583f99;
+
+  /* Sincro custom properties */
+  --sincro-bg: #F5F3F8;
+  --sincro-bg-card: #FFFFFF;
+  --sincro-bg-accent: #EFEAF5;
+  --sincro-bg-secondary: #F5F3F8;
+  --sincro-bg-input: #FFFFFF;
+  --sincro-text-primary: #1B1340;
+  --sincro-text-secondary: #3D3566;
+  --sincro-text-muted: #5C5480;
+  --sincro-border: rgba(45, 36, 87, 0.18);
+  --sincro-border-light: rgba(45, 36, 87, 0.1);
+  --sincro-modal-bg: #FFFFFF;
+  --sincro-modal-header: #583f99;
+  --sincro-modal-sidebar: #EFEAF5;
+  --sincro-modal-input: #F5F3F8;
+  --sincro-modal-text: #1B1340;
+  --status-cyan: #06B6D4;
+  --status-cyan-bg: rgba(6, 182, 212, 0.15);
+  --status-green: #22C55E;
+  --status-green-bg: rgba(34, 197, 94, 0.15);
+  --status-red: #EF4444;
+  --status-red-bg: rgba(239, 68, 68, 0.15);
+  --status-orange: #E67E22;
+  --status-orange-bg: rgba(230, 126, 34, 0.15);
+  --status-yellow: #EAB308;
+  --status-yellow-bg: rgba(234, 179, 8, 0.15);
+}
+
+.dark {
+  --background: #170F2A;
+  --foreground: #EEEEEE;
+  --card: #2D243B;
+  --card-foreground: #EEEEEE;
+  --popover: #2D243B;
+  --popover-foreground: #EEEEEE;
+  --primary: #583f99;
+  --primary-foreground: #FFFFFF;
+  --secondary: #38266D;
+  --secondary-foreground: #EEEEEE;
+  --muted: #251A40;
+  --muted-foreground: rgba(255, 255, 255, 0.6);
+  --accent: #38266D;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E54545;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.15);
+  --input: rgba(255, 255, 255, 0.2);
+  --ring: #583f99;
+  --chart-1: #45C4D8;
+  --chart-2: #5EE86B;
+  --chart-3: #F1C40F;
+  --chart-4: #E67E22;
+  --chart-5: #E54545;
+  --radius: 0.75rem;
+  --sidebar: #2D243B;
+  --sidebar-foreground: #EEEEEE;
+  --sidebar-primary: #583f99;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #38266D;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.15);
+  --sidebar-ring: #583f99;
+
+  /* Sincro custom properties */
+  --sincro-bg: #170F2A;
+  --sincro-bg-card: #2D243B;
+  --sincro-bg-accent: #583f99;
+  --sincro-bg-secondary: #4E378B;
+  --sincro-bg-input: #3D2873;
+  --sincro-text-primary: #FFFFFF;
+  --sincro-text-secondary: rgba(255, 255, 255, 0.6);
+  --sincro-text-muted: rgba(255, 255, 255, 0.5);
+  --sincro-border: rgba(255, 255, 255, 0.15);
+  --sincro-border-light: rgba(255, 255, 255, 0.08);
+  --sincro-modal-bg: #583f99;
+  --sincro-modal-header: #583f99;
+  --sincro-modal-sidebar: #4E378B;
+  --sincro-modal-input: #3D2873;
+  --sincro-modal-text: #FFFFFF;
+  --status-cyan: #45C4D8;
+  --status-cyan-bg: rgba(69, 196, 216, 0.2);
+  --status-green: #5EE86B;
+  --status-green-bg: rgba(94, 232, 107, 0.2);
+  --status-red: #E54545;
+  --status-red-bg: rgba(229, 69, 69, 0.2);
+  --status-orange: #E67E22;
+  --status-orange-bg: rgba(230, 126, 34, 0.2);
+  --status-yellow: #F1C40F;
+  --status-yellow-bg: rgba(241, 196, 15, 0.2);
+}
+
+@theme inline {
+  --font-sans: 'Poppins', 'Poppins Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Sincro custom theme utilities */
+  --color-sincro-bg: var(--sincro-bg);
+  --color-sincro-bg-card: var(--sincro-bg-card);
+  --color-sincro-bg-accent: var(--sincro-bg-accent);
+  --color-sincro-bg-secondary: var(--sincro-bg-secondary);
+  --color-sincro-bg-input: var(--sincro-bg-input);
+  --color-sincro-text-primary: var(--sincro-text-primary);
+  --color-sincro-text-secondary: var(--sincro-text-secondary);
+  --color-sincro-text-muted: var(--sincro-text-muted);
+  --color-sincro-border: var(--sincro-border);
+  --color-sincro-border-light: var(--sincro-border-light);
+  --color-sincro-modal-bg: var(--sincro-modal-bg);
+  --color-sincro-modal-header: var(--sincro-modal-header);
+  --color-sincro-modal-sidebar: var(--sincro-modal-sidebar);
+  --color-sincro-modal-input: var(--sincro-modal-input);
+  --color-sincro-modal-text: var(--sincro-modal-text);
+  --color-status-cyan: var(--status-cyan);
+  --color-status-cyan-bg: var(--status-cyan-bg);
+  --color-status-green: var(--status-green);
+  --color-status-green-bg: var(--status-green-bg);
+  --color-status-red: var(--status-red);
+  --color-status-red-bg: var(--status-red-bg);
+  --color-status-orange: var(--status-orange);
+  --color-status-orange-bg: var(--status-orange-bg);
+  --color-status-yellow: var(--status-yellow);
+  --color-status-yellow-bg: var(--status-yellow-bg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@utility bg-sincro-dark-gradient {
+  background:
+    linear-gradient(rgba(0, 0, 20, 0.2), rgba(0, 0, 0, 0.2)),
+    linear-gradient(to bottom, #3A2962, #7755C8);
+}
