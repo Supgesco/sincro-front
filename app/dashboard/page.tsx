@@ -359,7 +359,7 @@ export default function DashboardPage() {
                 {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).map((tarefa) => (
                   <div
                     key={tarefa.id}
-                    className={`flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card transition-all duration-400 ease-out ${
+                    className={`flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card min-h-[88px] transition-all duration-400 ease-out ${
                       leavingIds.has(tarefa.id)
                         ? "opacity-0 translate-x-6 scale-95 max-h-0 p-0 gap-0 mb-[-10px] overflow-hidden pointer-events-none"
                         : ""
@@ -409,9 +409,7 @@ export default function DashboardPage() {
                         })()}
                       </div>
                     </div>
-                    <div className={`flex flex-col items-end gap-1.5 shrink-0 min-w-[120px] text-sm ${
-                        tarefa.urgente ? "min-h-[60px] justify-between" : "justify-center"
-                      }`}>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[120px] text-sm min-h-[72px] justify-between">
                       {tarefa.urgente && (
                         <span className="flex items-center gap-1 text-status-red font-extrabold">
                           <span className="w-2 h-2 rounded-full bg-status-red animate-pulse" />
@@ -465,6 +463,11 @@ export default function DashboardPage() {
                 {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).length === 0 && (
                   <div className="text-center py-6 text-sincro-text-muted text-sm flex flex-col items-center gap-3">
                     <span>Nenhuma tarefa urgente, em atraso ou favoritada.</span>
+                    {tarefas.some(t => t.status === "Finalizado") && (
+                      <span className="text-[11px] text-sincro-text-secondary">
+                        ({tarefas.filter(t => t.status === "Finalizado").length} tarefa(s) oculta(s) por já estarem finalizadas)
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => {

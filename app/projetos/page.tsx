@@ -224,7 +224,7 @@ export default function ProjetosPage() {
           </div>
 
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 p-4 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
+            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />
                 <input
@@ -475,7 +475,7 @@ function ProjectCard({
   return (
     <div
       onClick={onClick}
-      className="border border-sincro-border rounded-2xl p-4 cursor-pointer bg-sincro-team-card hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all duration-200"
+      className="border border-sincro-border rounded-2xl p-4 cursor-pointer bg-sincro-team-card hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all duration-200 h-full min-h-[160px] flex flex-col"
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1 min-w-0">

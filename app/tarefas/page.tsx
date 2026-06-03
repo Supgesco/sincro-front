@@ -277,8 +277,8 @@ function TarefasContent() {
 
           {/* Coluna Central — Filtros & Lista */}
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 p-4 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
+            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap mx-4">
+              <div className="flex items-center gap-2 px-0 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />
                 <input
                   type="text"
@@ -338,11 +338,10 @@ function TarefasContent() {
               <button
                 type="button"
                 onClick={() => setApenasUrgentes(prev => !prev)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${
-                  apenasUrgentes
-                    ? "bg-status-red-bg border-status-red text-status-red font-bold"
-                    : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${apenasUrgentes
+                  ? "bg-status-red-bg border-status-red text-status-red font-bold"
+                  : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
+                  }`}
               >
                 <span className="w-2 h-2 rounded-full bg-status-red" />
                 Urgentes
@@ -384,25 +383,23 @@ function TarefasContent() {
                   return (
                     <div
                       key={tarefa.id}
-                      className="flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card"
+                      className="flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card min-h-[88px]"
                     >
                       <button
                         type="button"
                         onClick={() => handleToggleFavorita(tarefa.id)}
-                        className={`shrink-0 p-1.5 rounded-full transition-all cursor-pointer ${
-                          favoritasIds.includes(tarefa.id)
-                            ? "bg-status-yellow-bg"
-                            : "hover:bg-white/10"
-                        }`}
+                        className={`shrink-0 p-1.5 rounded-full transition-all cursor-pointer ${favoritasIds.includes(tarefa.id)
+                          ? "bg-status-yellow-bg"
+                          : "hover:bg-white/10"
+                          }`}
                         title={favoritasIds.includes(tarefa.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                       >
                         <Star
                           style={{ fill: favoritasIds.includes(tarefa.id) ? "currentColor" : "none" }}
-                          className={`w-5 h-5 transition-all ${
-                            favoritasIds.includes(tarefa.id)
-                              ? "text-status-yellow"
-                              : "text-sincro-text-secondary"
-                          }`}
+                          className={`w-5 h-5 transition-all ${favoritasIds.includes(tarefa.id)
+                            ? "text-status-yellow"
+                            : "text-sincro-text-secondary"
+                            }`}
                         />
                       </button>
                       <div className="flex flex-col justify-center min-w-0 flex-1">
@@ -410,19 +407,17 @@ function TarefasContent() {
                         <div className="flex items-center gap-2 mt-1 text-sm text-sincro-text-secondary min-w-0 flex-wrap">
                           {tarefa.projeto && <span className="truncate">{tarefa.projeto}</span>}
                           {tarefa.projeto && <span className="opacity-50">•</span>}
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${
-                            statusBadgeSolidCor[tarefa.status] || "bg-sincro-text-secondary/40"
-                          }`}>{tarefa.status}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${statusBadgeSolidCor[tarefa.status] || "bg-sincro-text-secondary/40"
+                            }`}>{tarefa.status}</span>
                           {tarefa.checklist.length > 0 && (() => {
                             const concluidas = tarefa.checklist.filter(c => c.concluido).length
                             const total = tarefa.checklist.length
                             const completo = concluidas === total
                             return (
-                              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
-                                completo
-                                  ? "bg-status-green-bg text-status-green border-status-green/40"
-                                  : "bg-sincro-bg-input text-sincro-text-primary border-sincro-border"
-                              }`}>
+                              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${completo
+                                ? "bg-status-green-bg text-status-green border-status-green/40"
+                                : "bg-sincro-bg-input text-sincro-text-primary border-sincro-border"
+                                }`}>
                                 <ListTodo className="w-3 h-3" />
                                 {concluidas}/{total}
                               </span>
@@ -430,18 +425,15 @@ function TarefasContent() {
                           })()}
                         </div>
                       </div>
-                      <div className={`flex flex-col items-end gap-1.5 shrink-0 min-w-[120px] text-sm ${
-                        tarefa.urgente ? "min-h-[60px] justify-between" : "justify-center"
-                      }`}>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[120px] text-sm min-h-[72px] justify-between">
                         {tarefa.urgente && (
                           <span className="flex items-center gap-1 text-status-red font-extrabold">
                             <span className="w-2 h-2 rounded-full bg-status-red animate-pulse" />
                             Urgente
                           </span>
                         )}
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                          complexidadeCor[tarefa.complexidade] || "border-sincro-border text-sincro-text-primary"
-                        }`}>{tarefa.complexidade}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${complexidadeCor[tarefa.complexidade] || "border-sincro-border text-sincro-text-primary"
+                          }`}>{tarefa.complexidade}</span>
                         <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
                           <Calendar className="w-3.5 h-3.5" />
                           {tarefa.dataEntrega}
@@ -639,11 +631,10 @@ function FilterDropdown({
       <button
         type="button"
         onClick={() => setOpenDropdown(isOpen ? null : id)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${
-          hasFilter
-            ? "bg-sincro-text-primary/20 border-sincro-text-primary text-sincro-text-primary font-bold"
-            : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
-        }`}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${hasFilter
+          ? "bg-sincro-text-primary/20 border-sincro-text-primary text-sincro-text-primary font-bold"
+          : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
+          }`}
       >
         {Icon && <Icon className="w-4 h-4 opacity-70" />}
         {label}

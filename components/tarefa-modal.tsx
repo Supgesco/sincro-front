@@ -463,22 +463,6 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                     <Check className="w-5 h-5" />
                     Aceitar Tarefa
                   </button>
-                ) : tarefa.status === "Finalizado" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-status-green/40 bg-status-green-bg text-status-green text-base font-extrabold">
-                      <Check className="w-5 h-5" />
-                      Tarefa Finalizada
-                    </span>
-                    {onReabrir && (
-                      <button
-                        onClick={onReabrir}
-                        className="flex items-center gap-2 h-12 px-6 rounded-full border border-sincro-text-secondary text-sincro-text-primary bg-transparent hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all text-base font-extrabold"
-                      >
-                        <RotateCcw className="w-5 h-5" />
-                        Reabrir Tarefa
-                      </button>
-                    )}
-                  </div>
                 ) : tarefa.status === "Em Andamento" ? (
                   <button
                     onClick={onFinalizar}
@@ -486,6 +470,14 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   >
                     <Check className="w-5 h-5" />
                     Finalizar Tarefa
+                  </button>
+                ) : tarefa.status === "Finalizado" && onReabrir ? (
+                  <button
+                    onClick={onReabrir}
+                    className="flex items-center gap-2 h-12 px-6 rounded-full bg-status-green text-white hover:brightness-110 active:scale-95 transition-all text-base font-extrabold"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                    Reabrir Tarefa
                   </button>
                 ) : (
                   <button
