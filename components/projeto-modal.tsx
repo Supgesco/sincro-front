@@ -148,14 +148,14 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     type="text"
                     value={editTitulo}
                     onChange={(e) => setEditTitulo(e.target.value)}
-                    className="text-2xl font-bold text-white bg-white/10 border border-white/30 rounded px-2.5 py-1 focus:outline-none w-full"
+                    className="text-2xl font-bold text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2.5 py-1 focus:outline-none w-full"
                     placeholder="Título do Projeto"
                   />
                   <input
                     type="text"
                     value={editData}
                     onChange={(e) => setEditData(e.target.value)}
-                    className="text-xs text-white/80 bg-white/10 border border-white/20 rounded px-2 py-0.5 w-40 focus:outline-none"
+                    className="text-xs text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 w-40 focus:outline-none"
                     placeholder="Data / Período"
                   />
                 </div>
@@ -175,7 +175,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="px-2 py-0.5 rounded bg-[#2D243B] text-white font-bold border border-white/20 focus:outline-none"
+                    className="px-2 py-0.5 rounded bg-sincro-bg-input text-sincro-modal-text font-bold border border-sincro-border focus:outline-none"
                   >
                     <option value="Em Planejamento">Em Planejamento</option>
                     <option value="Em Andamento">Em Andamento</option>
@@ -193,7 +193,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
 
             <div className="flex flex-col items-end gap-2 shrink-0">
               {isEditing ? (
-                <div className="flex flex-col items-end gap-1 text-xs text-white">
+                <div className="flex flex-col items-end gap-1 text-xs text-sincro-modal-text">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -211,7 +211,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                       max="10"
                       value={editComplexidade}
                       onChange={(e) => setEditComplexidade(Number(e.target.value))}
-                      className="bg-white/10 border border-white/20 rounded px-1.5 py-0.5 w-12 text-center text-white"
+                      className="bg-sincro-bg-input border border-sincro-border rounded px-1.5 py-0.5 w-12 text-center text-sincro-modal-text"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                 <textarea
                   value={editDescricao}
                   onChange={(e) => setEditDescricao(e.target.value)}
-                  className="w-full h-full min-h-[100px] bg-white/5 border border-white/20 rounded-xl p-3 text-sm text-white focus:outline-none resize-none leading-relaxed"
+                  className="w-full h-full min-h-[100px] bg-sincro-bg-input border border-sincro-border rounded-xl p-3 text-sm text-sincro-modal-text focus:outline-none resize-none leading-relaxed"
                   placeholder="Descreva o projeto..."
                 />
               ) : (

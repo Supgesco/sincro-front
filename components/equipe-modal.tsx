@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Modal } from "./modal"
-import { X, User, BarChart2 } from "lucide-react"
+import { X, User, BarChart2, UserPlus, Plus, Trash2 } from "lucide-react"
 
 interface Membro {
   nome: string
@@ -353,6 +353,198 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave }: EquipeModalProp
             </button>
           </div>
         </div>
+      </div>
+    </Modal>
+  )
+}
+
+interface CriarEquipeModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onCriar?: (equipe: { nome: string; gestor: string; descricao: string; membros: { nome: string; status: string; ativo: boolean }[] }) => void
+}
+
+export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalProps) {
+  const [nome, setNome] = useState("")
+  const [gestor, setGestor] = useState("")
+  const [descricao, setDescricao] = useState("")
+  const [membros, setMembros] = useState<{ nome: string; status: string; ativo: boolean }[]>([])
+  const [novoMembroNome, setNovoMembroNome] = useState("")
+  const [touched, setTouched] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setNome("")
+      setGestor("")
+      setDescricao("")
+      setMembros([])
+      setNovoMembroNome("")
+      setTouched(false)
+    }
+  }, [isOpen])
+
+  const nomeInvalido = touched && !nome.trim()
+
+  const handleAddMembro = () => {
+    if (!novoMembroNome.trim()) return
+    setMembros(prev => [...prev, { nome: novoMembroNome.trim(), status: "Sem tarefas ativas", ativo: true }])
+    setNovoMembroNome("")
+  }
+
+  const handleRemoveMembro = (idx: number) => {
+    setMembros(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setTouched(true)
+    if (!nome.trim()) return
+    onCriar?.({
+      nome: nome.trim(),
+      gestor: gestor.trim() || "Sem gestor",
+      descricao: descricao.trim(),
+      membros,
+    })
+    onClose()
+  }
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      hideClose
+      className="w-[min(680px,92vw)] max-h-[90vh] flex flex-col overflow-hidden rounded-2xl"
+    >
+      <div className="flex flex-col text-sincro-modal-text flex-1 min-h-0 bg-sincro-modal-bg dark:bg-sincro-dark-gradient">
+        <div className="flex items-center justify-between gap-4 px-7 py-5 border-b border-sincro-border shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-status-green-bg text-status-green shrink-0">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-xl font-extrabold leading-tight">Criar Nova Equipe</h2>
+              <p className="text-xs text-sincro-text-secondary mt-0.5">Defina as informações iniciais da equipe</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full transition-colors hover:bg-black/10 dark:hover:bg-white/10 text-sincro-modal-text shrink-0"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-7 py-5 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
+                Nome da Equipe <span className="text-status-red">*</span>
+              </label>
+              <input
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Ex: Equipe Dev"
+                className={`px-4 py-2.5 rounded-xl bg-sincro-bg-input border text-sincro-modal-text focus:outline-none transition-colors ${
+                  nomeInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-primary"
+                }`}
+              />
+              {nomeInvalido && (
+                <span className="text-[11px] text-status-red font-semibold">O nome da equipe é obrigatório.</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
+                Gestor
+              </label>
+              <input
+                type="text"
+                value={gestor}
+                onChange={(e) => setGestor(e.target.value)}
+                placeholder="Ex: João Silva"
+                className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
+                Descrição
+              </label>
+              <textarea
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Descreva o propósito da equipe..."
+                rows={3}
+                className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
+                Membros
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={novoMembroNome}
+                  onChange={(e) => setNovoMembroNome(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMembro() } }}
+                  placeholder="Nome do membro"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddMembro}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-status-green text-white text-sm font-bold hover:brightness-110 active:scale-95 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  Adicionar
+                </button>
+              </div>
+              {membros.length > 0 && (
+                <div className="flex flex-col gap-1.5 mt-1">
+                  {membros.map((m, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-sincro-border bg-sincro-modal-bg">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-sincro-bg-input flex items-center justify-center shrink-0">
+                          <User className="w-3.5 h-3.5 text-sincro-modal-text" />
+                        </div>
+                        <span className="text-sm font-semibold text-sincro-modal-text truncate">{m.nome}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMembro(idx)}
+                        className="p-1.5 rounded-full text-status-red hover:bg-status-red-bg transition-colors"
+                        aria-label="Remover membro"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 px-7 py-4 border-t border-sincro-border shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="border border-sincro-border text-sincro-modal-text rounded-full px-6 py-2 text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-status-green text-white rounded-full px-6 py-2 text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all"
+            >
+              Criar Equipe
+            </button>
+          </div>
+        </form>
       </div>
     </Modal>
   )

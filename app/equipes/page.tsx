@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Navbar } from "@/components/navbar"
-import { EquipeModal } from "@/components/equipe-modal"
+import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
 import { Plus, User } from "lucide-react"
 
 const equipesData = [
@@ -138,6 +138,7 @@ function EquipeCard({ equipe, onClick }: { equipe: typeof equipesData[0]; onClic
 export default function EquipesPage() {
   const [equipes, setEquipes] = useState(equipesData)
   const [selectedEquipe, setSelectedEquipe] = useState<typeof equipesData[0] | null>(null)
+  const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
@@ -147,8 +148,11 @@ export default function EquipesPage() {
         {/* CABEÇALHO: Título + Botão na mesma linha */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-[36px] font-extrabold text-sincro-text-primary leading-none">Suas Equipes</h1>
-          <button className="flex items-center gap-2 h-10 px-6 rounded-full border border-sincro-border bg-transparent text-sincro-text-primary text-sm font-bold hover:bg-black/5 active:scale-95 transition-all whitespace-nowrap">
-            <span className="w-3.5 h-3.5 rounded-full bg-sincro-text-secondary/40 shrink-0" />
+          <button
+            onClick={() => setIsCriarModalOpen(true)}
+            className="flex items-center gap-2 h-10 px-6 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all whitespace-nowrap shadow-lg hover:scale-[1.03]"
+          >
+            <Plus className="w-4 h-4" />
             Criar Nova Equipe
           </button>
         </div>
@@ -168,6 +172,27 @@ export default function EquipesPage() {
           equipe={selectedEquipe}
         />
       )}
+
+      <CriarEquipeModal
+        isOpen={isCriarModalOpen}
+        onClose={() => setIsCriarModalOpen(false)}
+        onCriar={(novaEquipe) => {
+          const novo = {
+            ...equipesData[0],
+            id: equipes.length + 1,
+            nome: novaEquipe.nome,
+            gestor: novaEquipe.gestor,
+            descricao: novaEquipe.descricao,
+            numMembros: novaEquipe.membros.length,
+            membros: novaEquipe.membros.map(m => ({ nome: m.nome, status: m.status, ativo: m.ativo })),
+            projetosAtivos: 0,
+            emAndamento: 0,
+            emAtraso: 0,
+            projetos: [],
+          }
+          setEquipes(prev => [...prev, novo])
+        }}
+      />
     </div>
   )
 }

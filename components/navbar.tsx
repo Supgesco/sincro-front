@@ -38,14 +38,12 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-colors ${
-                    isActive 
-                      ? "bg-black/10 dark:bg-white/10" 
+                    isActive
+                      ? "bg-black/10 dark:bg-white/10"
                       : "hover:bg-black/5 dark:hover:bg-white/5"
                   } text-sincro-text-primary`}
                 >
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center bg-sincro-text-primary/20">
-                    <Icon className="w-4 h-4" />
-                  </div>
+                  <Icon className="w-4 h-4" />
                   {item.label}
                 </Link>
               )

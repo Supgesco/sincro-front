@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Users, ListChecks, Folder, Filter, ChevronDown, Check, X } from "lucide-react"
 import { ProjetoModal, CriarProjetoModal } from "@/components/projeto-modal"
 
 const projetosData = [
@@ -155,6 +155,9 @@ const statusBadge: Record<string, string> = {
   "Em Atraso": "bg-status-red",
   "Finalizado": "bg-status-green",
   "Não Iniciado": "bg-sincro-text-secondary/40",
+  "Suspenso": "bg-status-yellow",
+  "Em Planejamento": "bg-status-orange",
+  "Concluído": "bg-status-green",
 }
 
 const progressBar: Record<string, string> = {
@@ -162,6 +165,9 @@ const progressBar: Record<string, string> = {
   "Em Atraso": "bg-status-red",
   "Finalizado": "bg-status-green",
   "Não Iniciado": "bg-sincro-text-secondary/40",
+  "Suspenso": "bg-status-yellow",
+  "Em Planejamento": "bg-status-orange",
+  "Concluído": "bg-status-green",
 }
 
 export default function ProjetosPage() {
@@ -170,14 +176,30 @@ export default function ProjetosPage() {
   const [projetos, setProjetos] = useState(projetosData)
   const [selectedProjeto, setSelectedProjeto] = useState<typeof projetosData[0] | null>(null)
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
+  const [equipeFilter, setEquipeFilter] = useState<string[]>([])
+  const [statusFilter, setStatusFilter] = useState<string[]>([])
+  const [complexidadeFilter, setComplexidadeFilter] = useState<string[]>([])
+  const [apenasUrgentes, setApenasUrgentes] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   const totalProjetos = projetos.length
   const projetosAtivos = projetos.filter(p => p.status === "Em Andamento").length
   const projetosAtraso = projetos.filter(p => p.status === "Em Atraso").length
 
-  const filteredProjetos = projetos.filter(p =>
-    p.titulo.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const complexidadeDoProjeto = (c: number) => {
+    if (c <= 3) return "Baixa"
+    if (c <= 6) return "Média"
+    return "Alta"
+  }
+
+  const filteredProjetos = projetos.filter(p => {
+    const matchSearch = p.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchEquipe = equipeFilter.length === 0 || equipeFilter.includes(p.equipe)
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(p.status)
+    const matchComplexidade = complexidadeFilter.length === 0 || complexidadeFilter.includes(complexidadeDoProjeto(p.complexidade))
+    const matchUrgente = !apenasUrgentes || p.urgente
+    return matchSearch && matchEquipe && matchStatus && matchComplexidade && matchUrgente
+  })
 
   return (
     <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
@@ -202,8 +224,8 @@ export default function ProjetosPage() {
           </div>
 
           <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 p-4 border border-sincro-border rounded-2xl bg-sincro-modal-sidebar">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 max-w-xs bg-white/5">
+            <div className="flex items-center gap-4 p-4 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />
                 <input
                   type="text"
@@ -214,8 +236,64 @@ export default function ProjetosPage() {
                 />
               </div>
 
-              <FilterButton label="Equipe" />
-              <FilterButton label="Status" />
+              <FilterDropdown
+                id="equipe"
+                label="Equipe"
+                icon={Users}
+                options={Array.from(new Set(projetos.map(p => p.equipe)))}
+                selected={equipeFilter}
+                onChange={setEquipeFilter}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+              />
+              <FilterDropdown
+                id="status"
+                label="Status"
+                icon={ListChecks}
+                options={["Não Iniciado", "Em Andamento", "Em Atraso", "Finalizado"]}
+                selected={statusFilter}
+                onChange={setStatusFilter}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+              />
+              <FilterDropdown
+                id="complexidade"
+                label="Complexidade"
+                icon={Filter}
+                options={["Baixa", "Média", "Alta"]}
+                selected={complexidadeFilter}
+                onChange={setComplexidadeFilter}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+              />
+
+              <button
+                type="button"
+                onClick={() => setApenasUrgentes(prev => !prev)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${
+                  apenasUrgentes
+                    ? "bg-status-red-bg border-status-red text-status-red font-bold"
+                    : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-status-red" />
+                Urgentes
+              </button>
+
+              {(equipeFilter.length > 0 || statusFilter.length > 0 || complexidadeFilter.length > 0 || apenasUrgentes || searchTerm) && (
+                <button
+                  onClick={() => {
+                    setEquipeFilter([])
+                    setStatusFilter([])
+                    setComplexidadeFilter([])
+                    setApenasUrgentes(false)
+                    setSearchTerm("")
+                  }}
+                  className="text-xs text-white/60 hover:text-status-red transition-colors px-2"
+                >
+                  Limpar tudo
+                </button>
+              )}
 
               <button
                 onClick={() => setIsCriarModalOpen(true)}
@@ -295,12 +373,93 @@ export default function ProjetosPage() {
   )
 }
 
-function FilterButton({ label }: { label: string }) {
+function FilterDropdown({
+  id,
+  label,
+  icon: Icon,
+  options,
+  selected,
+  onChange,
+  openDropdown,
+  setOpenDropdown
+}: {
+  id: string
+  label: string
+  icon?: React.ComponentType<{ className?: string }>
+  options: string[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  openDropdown: string | null
+  setOpenDropdown: (id: string | null) => void
+}) {
+  const isOpen = openDropdown === id
+  const hasFilter = selected.length > 0
+
+  const toggleOption = (opt: string) => {
+    if (selected.includes(opt)) {
+      onChange(selected.filter(s => s !== opt))
+    } else {
+      onChange([...selected, opt])
+    }
+  }
+
   return (
-    <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/40 bg-transparent text-sm transition-colors hover:bg-white/10 text-sincro-text-primary">
-      <span className="w-4 h-4 rounded-full bg-sincro-text-secondary/20" />
-      {label}
-    </button>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpenDropdown(isOpen ? null : id)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${
+          hasFilter
+            ? "bg-sincro-text-primary/20 border-sincro-text-primary text-sincro-text-primary font-bold"
+            : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
+        }`}
+      >
+        {Icon && <Icon className="w-4 h-4 opacity-70" />}
+        {label}
+        {hasFilter && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-sincro-text-primary text-sincro-bg text-[10px] font-extrabold">
+            {selected.length}
+          </span>
+        )}
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setOpenDropdown(null)}
+          />
+          <div className="absolute left-0 top-full mt-2 z-20 min-w-[220px] p-2 rounded-xl border border-sincro-border bg-sincro-modal-bg shadow-xl flex flex-col gap-1">
+            {options.map(opt => {
+              const isSelected = selected.includes(opt)
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => toggleOption(opt)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left hover:bg-white/10 transition-colors cursor-pointer text-sincro-text-primary"
+                >
+                  <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "bg-sincro-text-primary border-sincro-text-primary" : "border-white/40"}`}>
+                    {isSelected && <Check className="w-3 h-3 text-sincro-bg" />}
+                  </span>
+                  <span className="flex-1">{opt}</span>
+                </button>
+              )
+            })}
+            {hasFilter && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="mt-1 px-3 py-1.5 rounded-lg text-xs text-status-red hover:bg-status-red-bg transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -316,7 +475,7 @@ function ProjectCard({
   return (
     <div
       onClick={onClick}
-      className="border border-sincro-border rounded-2xl p-4 cursor-pointer bg-sincro-modal-sidebar hover:border-white/30 hover:bg-white/5 active:scale-[0.98] transition-all duration-200"
+      className="border border-sincro-border rounded-2xl p-4 cursor-pointer bg-sincro-team-card hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all duration-200"
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1 min-w-0">

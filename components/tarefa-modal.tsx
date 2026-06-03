@@ -458,23 +458,23 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 {!tarefa.aceita ? (
                   <button
                     onClick={onAceitar}
-                    className="flex items-center gap-2 h-10 px-5 rounded-full border border-status-green text-status-green hover:bg-status-green-bg active:scale-95 transition-all text-sm font-bold"
+                    className="flex items-center gap-2 h-12 px-6 rounded-full border border-status-green text-status-green hover:bg-status-green-bg active:scale-95 transition-all text-base font-extrabold"
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-5 h-5" />
                     Aceitar Tarefa
                   </button>
                 ) : tarefa.status === "Finalizado" ? (
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-2 h-10 px-5 rounded-full border border-status-green/40 bg-status-green-bg text-status-green text-sm font-bold">
-                      <Check className="w-4 h-4" />
+                    <span className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-status-green/40 bg-status-green-bg text-status-green text-base font-extrabold">
+                      <Check className="w-5 h-5" />
                       Tarefa Finalizada
                     </span>
                     {onReabrir && (
                       <button
                         onClick={onReabrir}
-                        className="flex items-center gap-2 h-10 px-5 rounded-full border border-sincro-text-secondary text-sincro-text-primary bg-transparent hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all text-sm font-bold"
+                        className="flex items-center gap-2 h-12 px-6 rounded-full border border-sincro-text-secondary text-sincro-text-primary bg-transparent hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all text-base font-extrabold"
                       >
-                        <RotateCcw className="w-4 h-4" />
+                        <RotateCcw className="w-5 h-5" />
                         Reabrir Tarefa
                       </button>
                     )}
@@ -482,17 +482,17 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 ) : tarefa.status === "Em Andamento" ? (
                   <button
                     onClick={onFinalizar}
-                    className="flex items-center gap-2 h-10 px-5 rounded-full bg-status-green text-white hover:brightness-110 active:scale-95 transition-all text-sm font-extrabold"
+                    className="flex items-center gap-2 h-12 px-6 rounded-full bg-status-green text-white hover:brightness-110 active:scale-95 transition-all text-base font-extrabold"
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-5 h-5" />
                     Finalizar Tarefa
                   </button>
                 ) : (
                   <button
                     onClick={onIniciar}
-                    className="flex items-center gap-2 h-10 px-5 rounded-full bg-status-cyan text-white hover:brightness-110 active:scale-95 transition-all text-sm font-extrabold"
+                    className="flex items-center gap-2 h-12 px-6 rounded-full bg-status-cyan text-white hover:brightness-110 active:scale-95 transition-all text-base font-extrabold"
                   >
-                    <Play className="w-4 h-4" />
+                    <Play className="w-5 h-5" />
                     Iniciar Tarefa
                   </button>
                 )}

@@ -1,11 +1,93 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { addDays } from "date-fns"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
+import { Modal } from "@/components/modal"
 import { TarefaModal } from "@/components/tarefa-modal"
-import { Check, ChevronLeft, ChevronRight, Play } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Play, X, User, Calendar, Folder, Eye, Star, ListTodo } from "lucide-react"
+
+const STORAGE_KEY = "sincro-tarefas-finalizadas"
+
+type FinalizedInfo = { id: number; finalizadoPor: string; finalizadoEm: string }
+
+const getFinalized = (): Record<number, FinalizedInfo> => {
+  if (typeof window === "undefined") return {}
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return {}
+    const arr: FinalizedInfo[] = JSON.parse(raw)
+    return arr.reduce((acc, item) => {
+      acc[item.id] = item
+      return acc
+    }, {} as Record<number, FinalizedInfo>)
+  } catch {
+    return {}
+  }
+}
+
+const saveFinalized = (id: number, finalizadoPor: string, finalizadoEm: string) => {
+  if (typeof window === "undefined") return
+  const existing = getFinalized()
+  existing[id] = { id, finalizadoPor, finalizadoEm }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.values(existing)))
+}
+
+const removeFinalized = (id: number) => {
+  if (typeof window === "undefined") return
+  const existing = getFinalized()
+  delete existing[id]
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.values(existing)))
+}
+
+const FAVORITAS_KEY = "sincro-tarefas-favoritas"
+
+const getFavoritas = (): number[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(FAVORITAS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const saveFavorita = (id: number) => {
+  if (typeof window === "undefined") return
+  const existing = getFavoritas()
+  if (!existing.includes(id)) {
+    localStorage.setItem(FAVORITAS_KEY, JSON.stringify([...existing, id]))
+  }
+}
+
+const removeFavorita = (id: number) => {
+  if (typeof window === "undefined") return
+  const existing = getFavoritas()
+  localStorage.setItem(FAVORITAS_KEY, JSON.stringify(existing.filter(fid => fid !== id)))
+}
+
+const complexidadeCor: Record<string, string> = {
+  "Baixa Complexidade": "bg-status-green-bg text-status-green border-status-green/40",
+  "Média Complexidade": "bg-status-yellow-bg text-status-yellow border-status-yellow/40",
+  "Alta Complexidade": "bg-status-red-bg text-status-red border-status-red/40",
+}
+
+const statusPillCor: Record<string, string> = {
+  "Finalizado": "bg-status-green-bg text-status-green border-status-green/40",
+  "Em Andamento": "bg-status-cyan-bg text-status-cyan border-status-cyan/40",
+  "Em Atraso": "bg-status-red-bg text-status-red border-status-red/40",
+  "Não Iniciado": "bg-sincro-text-secondary/15 text-sincro-text-secondary border-sincro-text-secondary/30",
+}
+
+const statusBadgeSolidCor: Record<string, string> = {
+  "Finalizado": "bg-status-green",
+  "Em Andamento": "bg-status-cyan",
+  "Em Atraso": "bg-status-red",
+  "Não Iniciado": "bg-sincro-text-secondary/40",
+}
+
+const metaPillBase = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
 
 const tarefasData = [
   {
@@ -131,7 +213,40 @@ const eventosPorData: Record<string, { nome: string; cor: string }[]> = Object.f
 export default function DashboardPage() {
   const [tarefas, setTarefas] = useState(tarefasData)
   const [selectedTarefa, setSelectedTarefa] = useState<typeof tarefasData[0] | null>(null)
+  const [finalizadoInfo, setFinalizadoInfo] = useState<typeof tarefasData[0] | null>(null)
   const [semanaInicio, setSemanaInicio] = useState<Date>(HOJE_BASE)
+  const [leavingIds, setLeavingIds] = useState<Set<number>>(new Set())
+  const [favoritasIds, setFavoritasIds] = useState<number[]>([])
+
+  useEffect(() => {
+    const finalized = getFinalized()
+    setTarefas(prev => prev.map(t => {
+      const f = finalized[t.id]
+      if (f) {
+        return { ...t, status: "Finalizado", finalizadoPor: f.finalizadoPor, finalizadoEm: f.finalizadoEm }
+      }
+      return t
+    }))
+    setFavoritasIds(getFavoritas())
+  }, [])
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setFavoritasIds(getFavoritas())
+    }
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [])
+
+  const handleToggleFavorita = (id: number) => {
+    if (favoritasIds.includes(id)) {
+      removeFavorita(id)
+      setFavoritasIds(prev => prev.filter(fid => fid !== id))
+    } else {
+      saveFavorita(id)
+      setFavoritasIds(prev => [...prev, id])
+    }
+  }
 
   const totalTarefas = tarefas.length
   const tarefasConcluidas = tarefas.filter(t => t.status === "Finalizado").length
@@ -148,13 +263,34 @@ export default function DashboardPage() {
   }
 
   const handleFinalizarTarefa = (id: number) => {
-    setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Finalizado" } : t))
-    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Finalizado" } : prev)
+    setLeavingIds(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+    setTimeout(() => {
+      const agora = new Date()
+      const dd = agora.getDate().toString().padStart(2, "0")
+      const mm = (agora.getMonth() + 1).toString().padStart(2, "0")
+      const yyyy = agora.getFullYear()
+      const hh = agora.getHours().toString().padStart(2, "0")
+      const min = agora.getMinutes().toString().padStart(2, "0")
+      const dataFinalizacao = `${dd}/${mm}/${yyyy} às ${hh}:${min}`
+      setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Finalizado", finalizadoPor: "Seu Nome", finalizadoEm: dataFinalizacao } : t))
+      setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Finalizado", finalizadoPor: "Seu Nome", finalizadoEm: dataFinalizacao } : prev)
+      saveFinalized(id, "Seu Nome", dataFinalizacao)
+      setLeavingIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, 400)
   }
 
   const handleReabrirTarefa = (id: number) => {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
+    removeFinalized(id)
   }
 
   const diasAgenda: DiaAgenda[] = Array.from({ length: 14 }, (_, i) => {
@@ -188,11 +324,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
+    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="p-6">
-        <div className="flex gap-6">
+      <main className="p-6 flex-1 flex flex-col">
+        <div className="flex gap-6 flex-1">
           {/* Coluna Esquerda — Indicadores Circulares (paleta roxa + tipografia do sistema) */}
           <div className="flex flex-col gap-4">
             <CircularProgress
@@ -216,63 +352,135 @@ export default function DashboardPage() {
           </div>
 
           {/* Coluna Central — Minhas Tarefas & Agenda */}
-          <div className="flex-1 space-y-6">
-            <div className="bg-sincro-modal-sidebar border border-sincro-border rounded-2xl p-5">
+          <div className="flex-1 flex flex-col space-y-6 min-h-0">
+            <div className="bg-sincro-modal-sidebar border border-sincro-border rounded-2xl p-5 flex flex-col flex-1 min-h-0">
               <h2 className="text-lg font-bold mb-4">Minhas Tarefas</h2>
-              <div className="flex flex-col gap-2.5">
-                {tarefas.map((tarefa) => (
+              <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5 overflow-y-auto flex-1 min-h-0">
+                {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).map((tarefa) => (
                   <div
                     key={tarefa.id}
-                    className="flex items-center justify-between border border-sincro-border rounded-xl p-3 bg-white/5"
+                    className={`flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card transition-all duration-400 ease-out ${
+                      leavingIds.has(tarefa.id)
+                        ? "opacity-0 translate-x-6 scale-95 max-h-0 p-0 gap-0 mb-[-10px] overflow-hidden pointer-events-none"
+                        : ""
+                    }`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm text-sincro-text-primary truncate">{tarefa.nome}</h3>
-                      <div className="flex items-center gap-3 mt-1 text-[11px] text-sincro-text-secondary">
-                        <span>{tarefa.equipe}</span>
-                        {tarefa.urgente && (
-                          <span className="flex items-center gap-1 text-status-red font-bold">
-                            <span className="w-2 h-2 rounded-full bg-status-red animate-pulse" />
-                            Urgente
-                          </span>
-                        )}
-                        <span>{tarefa.data}</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] text-white font-bold ${tarefa.status === "Finalizado" ? "bg-status-green" :
-                            tarefa.status === "Em Andamento" ? "bg-status-cyan" :
-                              tarefa.status === "Em Atraso" ? "bg-status-red" : "bg-sincro-text-secondary/40"
-                          }`}>{tarefa.status}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFavorita(tarefa.id)}
+                      className={`shrink-0 p-1.5 rounded-full transition-all cursor-pointer ${
+                        favoritasIds.includes(tarefa.id)
+                          ? "bg-status-yellow-bg"
+                          : "hover:bg-white/10"
+                      }`}
+                      title={favoritasIds.includes(tarefa.id) ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                    >
+                      <Star
+                        style={{ fill: favoritasIds.includes(tarefa.id) ? "currentColor" : "none" }}
+                        className={`w-5 h-5 transition-all ${
+                          favoritasIds.includes(tarefa.id)
+                            ? "text-status-yellow"
+                            : "text-sincro-text-secondary"
+                        }`}
+                      />
+                    </button>
+                    <div className="flex flex-col justify-center min-w-0 flex-1">
+                      <h3 className="font-bold text-xl text-sincro-text-primary truncate">{tarefa.nome}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-sincro-text-secondary min-w-0 flex-wrap">
+                        {tarefa.equipe && <span className="truncate">{tarefa.equipe}</span>}
+                        {tarefa.equipe && <span className="opacity-50">•</span>}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${
+                          statusBadgeSolidCor[tarefa.status] || "bg-sincro-text-secondary/40"
+                        }`}>{tarefa.status}</span>
+                        {tarefa.checklist && tarefa.checklist.length > 0 && (() => {
+                          const concluidas = tarefa.checklist.filter(c => c.concluido).length
+                          const total = tarefa.checklist.length
+                          const completo = concluidas === total
+                          return (
+                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
+                              completo
+                                ? "bg-status-green-bg text-status-green border-status-green/40"
+                                : "bg-sincro-bg-input text-sincro-text-primary border-sincro-border"
+                            }`}>
+                              <ListTodo className="w-3 h-3" />
+                              {concluidas}/{total}
+                            </span>
+                          )
+                        })()}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <div className={`flex flex-col items-end gap-1.5 shrink-0 min-w-[120px] text-sm ${
+                        tarefa.urgente ? "min-h-[60px] justify-between" : "justify-center"
+                      }`}>
+                      {tarefa.urgente && (
+                        <span className="flex items-center gap-1 text-status-red font-extrabold">
+                          <span className="w-2 h-2 rounded-full bg-status-red animate-pulse" />
+                          Urgente
+                        </span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                        complexidadeCor[tarefa.complexidade] || "border-sincro-border text-sincro-text-primary"
+                      }`}>{tarefa.complexidade}</span>
+                      <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {tarefa.data}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => setSelectedTarefa(tarefa)}
-                        className="border border-sincro-border text-sincro-text-primary rounded-full px-4 py-2 text-xs font-bold hover:bg-white/10 active:scale-95 transition-all"
+                        className="flex items-center gap-2 border border-sincro-border text-sincro-text-primary rounded-full h-12 px-6 text-base font-extrabold hover:bg-white/10 active:scale-95 transition-all"
                       >
+                        <Eye className="w-5 h-5" />
                         Abrir Tarefa
                       </button>
                       {tarefa.status === "Não Iniciado" || tarefa.status === "Em Atraso" ? (
                         <button
                           onClick={() => handleIniciarTarefa(tarefa.id)}
-                          className="flex items-center gap-1.5 bg-status-cyan text-white rounded-full px-4 py-2 text-xs font-extrabold hover:brightness-110 active:scale-95 transition-all"
+                          className="flex items-center justify-center gap-2 bg-status-cyan text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:brightness-110 active:scale-95 transition-all"
                         >
-                          <Play className="w-3.5 h-3.5" />
+                          <Play className="w-5 h-5" />
                           Iniciar Tarefa
                         </button>
                       ) : tarefa.status === "Em Andamento" ? (
                         <button
                           onClick={() => handleFinalizarTarefa(tarefa.id)}
-                          className="flex items-center gap-1.5 bg-status-green text-white rounded-full px-4 py-2 text-xs font-extrabold hover:brightness-110 active:scale-95 transition-all"
+                          className="flex items-center justify-center gap-2 bg-status-green text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:brightness-110 active:scale-95 transition-all"
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <Check className="w-5 h-5" />
                           Marcar como Finalizada
+                        </button>
+                      ) : tarefa.status === "Finalizado" ? (
+                        <button
+                          onClick={() => setFinalizadoInfo(tarefa)}
+                          className="flex items-center justify-center gap-2 border border-status-green text-status-green rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:bg-status-green-bg active:scale-95 transition-all"
+                        >
+                          <Check className="w-5 h-5" />
+                          Tarefa Finalizada
                         </button>
                       ) : null}
                     </div>
                   </div>
                 ))}
+                {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).length === 0 && (
+                  <div className="text-center py-6 text-sincro-text-muted text-sm flex flex-col items-center gap-3">
+                    <span>Nenhuma tarefa urgente, em atraso ou favoritada.</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem("sincro-tarefas-finalizadas")
+                        window.location.reload()
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-sincro-primary/20 hover:bg-sincro-primary/30 text-sincro-text font-semibold transition-colors"
+                    >
+                      Limpar tarefas finalizadas
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-sincro-modal-sidebar border border-sincro-border rounded-2xl p-5">
+            <div className="bg-sincro-team-card border border-sincro-border rounded-2xl p-5 mt-auto">
               <div className="flex items-center justify-between mb-4 gap-3">
                 <h2 className="text-lg font-bold">Agenda</h2>
                 <div className="flex items-center gap-2">
@@ -404,6 +612,65 @@ export default function DashboardPage() {
             setSelectedTarefa(tarefaAtualizada)
           }}
         />
+      )}
+
+      {finalizadoInfo && (
+        <Modal
+          isOpen={!!finalizadoInfo}
+          onClose={() => setFinalizadoInfo(null)}
+          className="w-[min(440px,92vw)] rounded-2xl overflow-hidden"
+        >
+          <div className="bg-sincro-modal-bg dark:bg-sincro-dark-gradient text-sincro-modal-text">
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-sincro-border">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-full flex items-center justify-center bg-status-green-bg text-status-green">
+                  <Check className="w-4 h-4" />
+                </span>
+                <h2 className="text-lg font-extrabold">Tarefa Finalizada</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFinalizadoInfo(null)}
+                className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <p className="text-sm text-sincro-modal-text">
+                <span className="font-bold">{(finalizadoInfo as any).nome}</span> foi concluída.
+              </p>
+              <div className="rounded-xl border border-sincro-border bg-sincro-modal-sidebar p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="w-7 h-7 rounded-full bg-sincro-bg-accent border border-sincro-border flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5 text-sincro-text-primary" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-sincro-text-secondary">Finalizado por</p>
+                    <p className="text-sm font-bold text-sincro-modal-text truncate">{(finalizadoInfo as any).finalizadoPor || "Não registrado"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="w-7 h-7 rounded-full bg-sincro-bg-accent border border-sincro-border flex items-center justify-center shrink-0">
+                    <Calendar className="w-3.5 h-3.5 text-sincro-text-primary" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-sincro-text-secondary">Data/Hora</p>
+                    <p className="text-sm font-bold text-sincro-modal-text truncate">{(finalizadoInfo as any).finalizadoEm || "Não registrada"}</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFinalizadoInfo(null)}
+                className="h-10 px-5 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all self-end"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )
