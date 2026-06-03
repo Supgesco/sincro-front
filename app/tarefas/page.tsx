@@ -228,31 +228,45 @@ function TarefasContent() {
     removeFinalized(id)
   }
 
+  const getStatusEfetivo = (t: Tarefa): string => {
+    if (t.status === "Finalizado") return "Finalizado"
+    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
+    const entrega = new Date(ano, mes - 1, dia)
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    if (entrega < hoje) return "Em Atraso"
+    return t.status
+  }
+
   const totalTarefas = tarefas.length
-  const tarefasConcluidas = tarefas.filter(t => t.status === "Finalizado").length
-  const tarefasProgresso = tarefas.filter(t => t.status === "Em Andamento").length
-  const tarefasPendentes = tarefas.filter(t => t.status === "Não Iniciado" || t.status === "Em Atraso").length
+  const tarefasConcluidas = tarefas.filter(t => getStatusEfetivo(t) === "Finalizado").length
+  const tarefasProgresso = tarefas.filter(t => getStatusEfetivo(t) === "Em Andamento").length
+  const tarefasPendentes = tarefas.filter(t => {
+    const s = getStatusEfetivo(t)
+    return s === "Não Iniciado" || s === "Em Atraso"
+  }).length
 
   const pctConcluidas = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0
   const pctProgresso = totalTarefas > 0 ? (tarefasProgresso / totalTarefas) * 100 : 0
   const pctPendentes = totalTarefas > 0 ? (tarefasPendentes / totalTarefas) * 100 : 0
 
   const filteredTarefas = tarefas.filter(t => {
+    const statusEfetivo = getStatusEfetivo(t)
     const matchSearch = t.nome.toLowerCase().includes(searchTerm.toLowerCase())
     const matchProject = projetoFilter.length === 0 || projetoFilter.includes(t.projeto || "")
     const matchEquipe = equipeFilter.length === 0 || equipeFilter.includes(t.equipe || "")
-    const matchStatus = statusFilter.length === 0 || statusFilter.includes(t.status)
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(statusEfetivo)
     const matchComplexidade = complexidadeFilter.length === 0 || complexidadeFilter.includes(t.complexidade)
     const matchUrgente = !apenasUrgentes || t.urgente
     return matchSearch && matchProject && matchEquipe && matchStatus && matchComplexidade && matchUrgente
   })
 
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
+    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="p-6">
-        <div className="flex gap-6">
+      <main className="p-6 flex-1 flex flex-col">
+        <div className="flex gap-6 flex-1">
           {/* Coluna Esquerda — Indicadores Circulares */}
           <div className="flex flex-col gap-4">
             <CircularProgress
@@ -276,9 +290,9 @@ function TarefasContent() {
           </div>
 
           {/* Coluna Central — Filtros & Lista */}
-          <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap mx-4">
-              <div className="flex items-center gap-2 px-0 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
+          <div className="flex-1 flex flex-col space-y-6 min-h-0">
+            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />
                 <input
                   type="text"
@@ -373,7 +387,7 @@ function TarefasContent() {
               </button>
             </div>
 
-            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5">
+            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5 overflow-y-auto flex-1 min-h-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
               {filteredTarefas.length === 0 ? (
                 <div className="border border-sincro-border rounded-2xl p-8 text-center text-sincro-text-muted bg-sincro-modal-sidebar">
                   Nenhuma tarefa encontrada para o filtro selecionado.
@@ -447,7 +461,15 @@ function TarefasContent() {
                           <Eye className="w-5 h-5" />
                           Abrir Tarefa
                         </button>
-                        {tarefa.status === "Não Iniciado" || tarefa.status === "Em Atraso" ? (
+                        {!tarefa.aceita ? (
+                          <button
+                            onClick={() => handleAceitarTarefa(tarefa.id)}
+                            className="flex items-center justify-center gap-2 border border-status-green text-status-green rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
+                          >
+                            <Check className="w-5 h-5" />
+                            Aceitar Tarefa
+                          </button>
+                        ) : tarefa.status === "Não Iniciado" || tarefa.status === "Em Atraso" ? (
                           <button
                             onClick={() => handleIniciarTarefa(tarefa.id)}
                             className="flex items-center justify-center gap-2 bg-status-cyan text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"

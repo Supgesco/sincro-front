@@ -249,13 +249,31 @@ export default function DashboardPage() {
   }
 
   const totalTarefas = tarefas.length
-  const tarefasConcluidas = tarefas.filter(t => t.status === "Finalizado").length
-  const tarefasProgresso = tarefas.filter(t => t.status === "Em Andamento").length
-  const tarefasPendentes = tarefas.filter(t => t.status === "Não Iniciado" || t.status === "Em Atraso").length
+  const getStatusEfetivo = (t: { status: string; data: string }): string => {
+    if (t.status === "Finalizado") return "Finalizado"
+    const [dia, mes, ano] = t.data.split("/").map(Number)
+    const entrega = new Date(ano, mes - 1, dia)
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    if (entrega < hoje) return "Em Atraso"
+    return t.status
+  }
+
+  const tarefasConcluidas = tarefas.filter(t => getStatusEfetivo(t) === "Finalizado").length
+  const tarefasProgresso = tarefas.filter(t => getStatusEfetivo(t) === "Em Andamento").length
+  const tarefasPendentes = tarefas.filter(t => {
+    const s = getStatusEfetivo(t)
+    return s === "Não Iniciado" || s === "Em Atraso"
+  }).length
 
   const pctConcluidas = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0
   const pctProgresso = totalTarefas > 0 ? (tarefasProgresso / totalTarefas) * 100 : 0
   const pctPendentes = totalTarefas > 0 ? (tarefasPendentes / totalTarefas) * 100 : 0
+
+  const handleAceitarTarefa = (id: number) => {
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, aceita: true } : t))
+    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, aceita: true } : prev)
+  }
 
   const handleIniciarTarefa = (id: number) => {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
@@ -356,7 +374,10 @@ export default function DashboardPage() {
             <div className="bg-sincro-modal-sidebar border border-sincro-border rounded-2xl p-5 flex flex-col flex-1 min-h-0">
               <h2 className="text-lg font-bold mb-4">Minhas Tarefas</h2>
               <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5 overflow-y-auto flex-1 min-h-0">
-                {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).map((tarefa) => (
+                {tarefas.filter(t => {
+                  const s = getStatusEfetivo(t)
+                  return s !== "Finalizado" && (t.urgente || s === "Em Atraso" || favoritasIds.includes(t.id))
+                }).map((tarefa) => (
                   <div
                     key={tarefa.id}
                     className={`flex items-center gap-4 border border-sincro-border rounded-xl p-3 bg-sincro-team-card min-h-[88px] transition-all duration-400 ease-out ${
@@ -432,10 +453,18 @@ export default function DashboardPage() {
                         <Eye className="w-5 h-5" />
                         Abrir Tarefa
                       </button>
-                      {tarefa.status === "Não Iniciado" || tarefa.status === "Em Atraso" ? (
+                      {!tarefa.aceita ? (
+                        <button
+                          onClick={() => handleAceitarTarefa(tarefa.id)}
+                          className="flex items-center justify-center gap-2 border border-status-green text-status-green rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
+                        >
+                          <Check className="w-5 h-5" />
+                          Aceitar Tarefa
+                        </button>
+                      ) : tarefa.status === "Não Iniciado" || tarefa.status === "Em Atraso" ? (
                         <button
                           onClick={() => handleIniciarTarefa(tarefa.id)}
-                          className="flex items-center justify-center gap-2 bg-status-cyan text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:brightness-110 active:scale-95 transition-all"
+                          className="flex items-center justify-center gap-2 bg-status-cyan text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                         >
                           <Play className="w-5 h-5" />
                           Iniciar Tarefa
@@ -443,7 +472,7 @@ export default function DashboardPage() {
                       ) : tarefa.status === "Em Andamento" ? (
                         <button
                           onClick={() => handleFinalizarTarefa(tarefa.id)}
-                          className="flex items-center justify-center gap-2 bg-status-green text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:brightness-110 active:scale-95 transition-all"
+                          className="flex items-center justify-center gap-2 bg-status-green text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                         >
                           <Check className="w-5 h-5" />
                           Marcar como Finalizada
@@ -460,7 +489,10 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
-                {tarefas.filter(t => t.status !== "Finalizado" && (t.urgente || t.status === "Em Atraso" || favoritasIds.includes(t.id))).length === 0 && (
+                {tarefas.filter(t => {
+                  const s = getStatusEfetivo(t)
+                  return s !== "Finalizado" && (t.urgente || s === "Em Atraso" || favoritasIds.includes(t.id))
+                }).length === 0 && (
                   <div className="text-center py-6 text-sincro-text-muted text-sm flex flex-col items-center gap-3">
                     <span>Nenhuma tarefa urgente, em atraso ou favoritada.</span>
                     {tarefas.some(t => t.status === "Finalizado") && (
@@ -603,10 +635,7 @@ export default function DashboardPage() {
           isOpen={!!selectedTarefa}
           onClose={() => setSelectedTarefa(null)}
           tarefa={selectedTarefa as any}
-          onAceitar={() => {
-            setTarefas(prev => prev.map(t => t.id === selectedTarefa.id ? { ...t, aceita: true } : t))
-            setSelectedTarefa(prev => prev ? { ...prev, aceita: true } : null)
-          }}
+          onAceitar={() => handleAceitarTarefa(selectedTarefa.id)}
           onIniciar={() => handleIniciarTarefa(selectedTarefa.id)}
           onFinalizar={() => handleFinalizarTarefa(selectedTarefa.id)}
           onReabrir={() => handleReabrirTarefa(selectedTarefa.id)}
