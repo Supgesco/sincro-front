@@ -1,7 +1,7 @@
 1:"$Sreact.fragment"
-2:I[92825,["/_next/static/chunks/0dfovajzouaye.js","/_next/static/chunks/109e-5vdlhb6w.js"],"ClientSegmentRoot"]
-3:I[8374,["/_next/static/chunks/0dfovajzouaye.js","/_next/static/chunks/109e-5vdlhb6w.js","/_next/static/chunks/0_e5ngzlz7x3y.js","/_next/static/chunks/058jah83isj3i.js"],"default"]
-4:I[39756,["/_next/static/chunks/0dfovajzouaye.js","/_next/static/chunks/109e-5vdlhb6w.js"],"default"]
-5:I[37457,["/_next/static/chunks/0dfovajzouaye.js","/_next/static/chunks/109e-5vdlhb6w.js"],"default"]
-0:{"rsc":["$","$1","c",{"children":[[["$","script","script-0",{"src":"/_next/static/chunks/0_e5ngzlz7x3y.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/058jah83isj3i.js","async":true}]],["$","$L2",null,{"Component":"$3","slots":{"children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]},"serverProvidedParams":{"params":{},"promises":["$@6"]}}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"eNLw7QgrmDQhKM-7_5Jiv"}
+2:I[92825,["/sincro-front/_next/static/chunks/0dfovajzouaye.js","/sincro-front/_next/static/chunks/109e-5vdlhb6w.js"],"ClientSegmentRoot"]
+3:I[8374,["/sincro-front/_next/static/chunks/0dfovajzouaye.js","/sincro-front/_next/static/chunks/109e-5vdlhb6w.js","/sincro-front/_next/static/chunks/0_e5ngzlz7x3y.js","/sincro-front/_next/static/chunks/0a.bopz93ttw~.js"],"default"]
+4:I[39756,["/sincro-front/_next/static/chunks/0dfovajzouaye.js","/sincro-front/_next/static/chunks/109e-5vdlhb6w.js"],"default"]
+5:I[37457,["/sincro-front/_next/static/chunks/0dfovajzouaye.js","/sincro-front/_next/static/chunks/109e-5vdlhb6w.js"],"default"]
+0:{"rsc":["$","$1","c",{"children":[[["$","script","script-0",{"src":"/sincro-front/_next/static/chunks/0_e5ngzlz7x3y.js","async":true}],["$","script","script-1",{"src":"/sincro-front/_next/static/chunks/0a.bopz93ttw~.js","async":true}]],["$","$L2",null,{"Component":"$3","slots":{"children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]},"serverProvidedParams":{"params":{},"promises":["$@6"]}}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"WfBuCp55wOmBMFwhPGHBd"}
 6:"$0:rsc:props:children:1:props:serverProvidedParams:params"
