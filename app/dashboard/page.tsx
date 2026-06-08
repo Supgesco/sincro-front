@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { addDays } from "date-fns"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
 import { Modal } from "@/components/modal"
 import { TarefaModal } from "@/components/tarefa-modal"
-import { Check, ChevronLeft, ChevronRight, Play, X, User, Calendar, Folder, Eye, Star, ListTodo } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Play, X, User, Calendar, Folder, Eye, Star, ListTodo, RotateCcw } from "lucide-react"
+import { useToast } from "@/components/toast"
 
 const STORAGE_KEY = "sincro-tarefas-finalizadas"
 
@@ -67,6 +68,23 @@ const removeFavorita = (id: number) => {
   localStorage.setItem(FAVORITAS_KEY, JSON.stringify(existing.filter(fid => fid !== id)))
 }
 
+const TAREFAS_KEY = "sincro-tarefas-data"
+
+const getTarefasStorage = (): TarefaDashboard[] | null => {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(TAREFAS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const saveTarefasStorage = (tarefas: TarefaDashboard[]) => {
+  if (typeof window === "undefined") return
+  localStorage.setItem(TAREFAS_KEY, JSON.stringify(tarefas))
+}
+
 const complexidadeCor: Record<string, string> = {
   "Baixa Complexidade": "bg-status-green-bg text-status-green border-status-green/40",
   "Média Complexidade": "bg-status-yellow-bg text-status-yellow border-status-yellow/40",
@@ -89,17 +107,36 @@ const statusBadgeSolidCor: Record<string, string> = {
 
 const metaPillBase = "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border"
 
-const tarefasData = [
+type TarefaDashboard = {
+  id: number
+  nome: string
+  criador: string
+  dataCriacao: string
+  dataEntrega: string
+  status: string
+  complexidade: string
+  urgente: boolean
+  progresso: { atual: number; total: number }
+  descricao: string
+  checklist: { id: number; texto: string; concluido: boolean }[]
+  membros: string[]
+  comentarios: { autor: string; texto: string }[]
+  aceita: boolean
+  equipe?: string
+  projeto?: string
+}
+
+const tarefasData: TarefaDashboard[] = [
   {
     id: 1,
     nome: "Nome da Tarefa 1",
     criador: "Seu Nome",
     dataCriacao: "25 de janeiro, 2025",
     dataEntrega: "12/04/2026",
-    status: "Em Andamento",
+    status: "Não Iniciado",
     complexidade: "Média Complexidade",
     urgente: true,
-    progresso: { atual: 1, total: 2 },
+    progresso: { atual: 2, total: 4 },
     descricao: "Esta é a descrição detalhada da Tarefa 1, aberta a partir do Dashboard.",
     checklist: [
       { id: 1, texto: "Revisar especificações", concluido: true },
@@ -110,8 +147,7 @@ const tarefasData = [
       { autor: "Pessoa 2", texto: "Já iniciei as correções solicitadas." }
     ],
     aceita: false,
-    equipe: "Equipe X",
-    data: "12/04/2026"
+    equipe: "Equipe Dev",
   },
   {
     id: 2,
@@ -119,17 +155,16 @@ const tarefasData = [
     criador: "Seu Nome",
     dataCriacao: "25 de janeiro, 2025",
     dataEntrega: "12/04/2026",
-    status: "Em Andamento",
+    status: "Não Iniciado",
     complexidade: "Média Complexidade",
     urgente: true,
-    progresso: { atual: 0, total: 0 },
+    progresso: { atual: 0, total: 4 },
     descricao: "Esta é a descrição detalhada da Tarefa 2, aberta a partir do Dashboard.",
     checklist: [],
-    membros: ["Pessoa 3"],
+    membros: [],
     comentarios: [],
     aceita: false,
-    equipe: "Equipe X",
-    data: "12/04/2026"
+    equipe: "Equipe Dev",
   },
   {
     id: 3,
@@ -137,17 +172,16 @@ const tarefasData = [
     criador: "Seu Nome",
     dataCriacao: "25 de janeiro, 2025",
     dataEntrega: "12/04/2026",
-    status: "Não Iniciado",
+    status: "Em Andamento",
     complexidade: "Alta Complexidade",
     urgente: false,
-    progresso: { atual: 0, total: 0 },
+    progresso: { atual: 0, total: 4 },
     descricao: "Esta é a descrição detalhada da Tarefa 3, aberta a partir do Dashboard.",
     checklist: [],
     membros: [],
     comentarios: [],
     aceita: true,
-    equipe: "Equipe X",
-    data: "12/04/2026"
+    equipe: "Equipe QA",
   },
   {
     id: 4,
@@ -155,17 +189,67 @@ const tarefasData = [
     criador: "Seu Nome",
     dataCriacao: "25 de janeiro, 2025",
     dataEntrega: "12/04/2026",
-    status: "Em Atraso",
+    status: "Em Andamento",
     complexidade: "Baixa Complexidade",
     urgente: true,
-    progresso: { atual: 0, total: 0 },
+    progresso: { atual: 0, total: 4 },
     descricao: "Esta é a descrição detalhada da Tarefa 4, aberta a partir do Dashboard.",
     checklist: [],
     membros: [],
     comentarios: [],
     aceita: true,
-    equipe: "Equipe X",
-    data: "12/04/2026"
+    equipe: "Equipe Design",
+  },
+  {
+    id: 5,
+    nome: "Nome da Tarefa 5",
+    criador: "Seu Nome",
+    dataCriacao: "25 de janeiro, 2025",
+    dataEntrega: "12/04/2026",
+    status: "Em Andamento",
+    complexidade: "Média Complexidade",
+    urgente: false,
+    progresso: { atual: 0, total: 4 },
+    descricao: "Esta é a descrição detalhada da Tarefa 5.",
+    checklist: [],
+    membros: [],
+    comentarios: [],
+    aceita: true,
+    equipe: "Equipe Marketing",
+  },
+  {
+    id: 6,
+    nome: "Nome da Tarefa 6",
+    criador: "Seu Nome",
+    dataCriacao: "25 de janeiro, 2025",
+    dataEntrega: "12/04/2026",
+    status: "Não Iniciado",
+    complexidade: "Alta Complexidade",
+    urgente: false,
+    progresso: { atual: 0, total: 4 },
+    descricao: "Esta é a descrição detalhada da Tarefa 6.",
+    checklist: [],
+    membros: [],
+    comentarios: [],
+    aceita: false,
+    equipe: "Equipe Ops",
+  },
+  {
+    id: 7,
+    nome: "Nome da Tarefa 7",
+    criador: "Seu Nome",
+    dataCriacao: "25 de janeiro, 2025",
+    dataEntrega: "12/04/2026",
+    status: "Não Iniciado",
+    complexidade: "Baixa Complexidade",
+    urgente: false,
+    progresso: { atual: 0, total: 4 },
+    descricao: "Esta é a descrição detalhada da Tarefa 7.",
+    checklist: [],
+    membros: [],
+    comentarios: [],
+    aceita: false,
+    equipe: "Equipe Dados",
   },
 ]
 
@@ -211,23 +295,47 @@ const eventosPorData: Record<string, { nome: string; cor: string }[]> = Object.f
 )
 
 export default function DashboardPage() {
-  const [tarefas, setTarefas] = useState(tarefasData)
+  const { toast, notificar } = useToast()
+  const [tarefas, setTarefas] = useState<TarefaDashboard[]>(tarefasData)
   const [selectedTarefa, setSelectedTarefa] = useState<typeof tarefasData[0] | null>(null)
   const [finalizadoInfo, setFinalizadoInfo] = useState<typeof tarefasData[0] | null>(null)
   const [semanaInicio, setSemanaInicio] = useState<Date>(HOJE_BASE)
   const [leavingIds, setLeavingIds] = useState<Set<number>>(new Set())
   const [favoritasIds, setFavoritasIds] = useState<number[]>([])
 
+  const hasLoadedFromStorage = useRef(false)
+
   useEffect(() => {
+    const saved = getTarefasStorage()
+    if (saved) setTarefas(saved)
     const finalized = getFinalized()
-    setTarefas(prev => prev.map(t => {
-      const f = finalized[t.id]
-      if (f) {
-        return { ...t, status: "Finalizado", finalizadoPor: f.finalizadoPor, finalizadoEm: f.finalizadoEm }
-      }
-      return t
-    }))
     setFavoritasIds(getFavoritas())
+    if (saved) {
+      setTarefas(prev => {
+        const updated = prev.map(t => {
+          const f = finalized[t.id]
+          if (f && t.aceita) {
+            return { ...t, status: "Finalizado", finalizadoPor: f.finalizadoPor, finalizadoEm: f.finalizadoEm }
+          }
+          if (f && !t.aceita) {
+            removeFinalized(t.id)
+          }
+          return t
+        })
+        const atrasadas = updated.filter(t => {
+          if (t.status === "Finalizado") return false
+          const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
+          const entrega = new Date(ano, mes - 1, dia)
+          const hoje = new Date()
+          hoje.setHours(0, 0, 0, 0)
+          return entrega < hoje
+        })
+        if (atrasadas.length > 0) {
+          notificar(`${atrasadas.length} tarefa(s) em atraso!`, "warning")
+        }
+        return updated
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -237,6 +345,14 @@ export default function DashboardPage() {
     window.addEventListener("storage", handleStorage)
     return () => window.removeEventListener("storage", handleStorage)
   }, [])
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) {
+      hasLoadedFromStorage.current = true
+      return
+    }
+    saveTarefasStorage(tarefas)
+  }, [tarefas])
 
   const handleToggleFavorita = (id: number) => {
     if (favoritasIds.includes(id)) {
@@ -249,9 +365,9 @@ export default function DashboardPage() {
   }
 
   const totalTarefas = tarefas.length
-  const getStatusEfetivo = (t: { status: string; data: string }): string => {
+  const getStatusEfetivo = (t: { status: string; dataEntrega: string }): string => {
     if (t.status === "Finalizado") return "Finalizado"
-    const [dia, mes, ano] = t.data.split("/").map(Number)
+    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
     const entrega = new Date(ano, mes - 1, dia)
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
@@ -271,13 +387,15 @@ export default function DashboardPage() {
   const pctPendentes = totalTarefas > 0 ? (tarefasPendentes / totalTarefas) * 100 : 0
 
   const handleAceitarTarefa = (id: number) => {
-    setTarefas(prev => prev.map(t => t.id === id ? { ...t, aceita: true } : t))
-    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, aceita: true } : prev)
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, aceita: true, status: t.status === "Finalizado" ? "Em Andamento" : t.status } : t))
+    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, aceita: true, status: prev.status === "Finalizado" ? "Em Andamento" : prev.status } : prev)
+    toast("Tarefa aceita com sucesso!", "success")
   }
 
   const handleIniciarTarefa = (id: number) => {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
+    toast("Tarefa iniciada!", "info")
   }
 
   const handleFinalizarTarefa = (id: number) => {
@@ -302,6 +420,7 @@ export default function DashboardPage() {
         next.delete(id)
         return next
       })
+      toast("Tarefa finalizada com sucesso!", "success")
     }, 400)
   }
 
@@ -309,6 +428,7 @@ export default function DashboardPage() {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
     removeFinalized(id)
+    toast("Tarefa reaberta!", "info")
   }
 
   const diasAgenda: DiaAgenda[] = Array.from({ length: 14 }, (_, i) => {
@@ -342,11 +462,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary flex flex-col">
+    <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="p-6 flex-1 flex flex-col">
-        <div className="flex gap-6 flex-1">
+      <main className="p-6 flex-1 flex flex-col min-h-0">
+        <div className="flex gap-6 flex-1 min-h-0">
           {/* Coluna Esquerda — Indicadores Circulares (paleta roxa + tipografia do sistema) */}
           <div className="flex flex-col gap-4">
             <CircularProgress
@@ -376,7 +496,11 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5 overflow-y-auto flex-1 min-h-0">
                 {tarefas.filter(t => {
                   const s = getStatusEfetivo(t)
-                  return s !== "Finalizado" && (t.urgente || s === "Em Atraso" || favoritasIds.includes(t.id))
+                  const isUrgenteOuAtraso = t.urgente || s === "Em Atraso"
+                  const isFavorita = favoritasIds.includes(t.id)
+                  if (isUrgenteOuAtraso && s !== "Finalizado") return true
+                  if (isFavorita) return true
+                  return false
                 }).map((tarefa) => (
                   <div
                     key={tarefa.id}
@@ -408,11 +532,16 @@ export default function DashboardPage() {
                     <div className="flex flex-col justify-center min-w-0 flex-1">
                       <h3 className="font-bold text-xl text-sincro-text-primary truncate">{tarefa.nome}</h3>
                       <div className="flex items-center gap-2 mt-1 text-sm text-sincro-text-secondary min-w-0 flex-wrap">
-                        {tarefa.equipe && <span className="truncate">{tarefa.equipe}</span>}
-                        {tarefa.equipe && <span className="opacity-50">•</span>}
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${
-                          statusBadgeSolidCor[tarefa.status] || "bg-sincro-text-secondary/40"
-                        }`}>{tarefa.status}</span>
+                        {(tarefa.projeto || tarefa.equipe) && <span className="truncate">{tarefa.projeto || tarefa.equipe}</span>}
+                        {(tarefa.projeto || tarefa.equipe) && <span className="opacity-50">•</span>}
+                        {(() => {
+                          const s = getStatusEfetivo(tarefa)
+                          return (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${
+                              statusBadgeSolidCor[s] || "bg-sincro-text-secondary/40"
+                            }`}>{s}</span>
+                          )
+                        })()}
                         {tarefa.checklist && tarefa.checklist.length > 0 && (() => {
                           const concluidas = tarefa.checklist.filter(c => c.concluido).length
                           const total = tarefa.checklist.length
@@ -442,7 +571,7 @@ export default function DashboardPage() {
                       }`}>{tarefa.complexidade}</span>
                       <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
                         <Calendar className="w-3.5 h-3.5" />
-                        {tarefa.data}
+                        {tarefa.dataEntrega}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -475,15 +604,15 @@ export default function DashboardPage() {
                           className="flex items-center justify-center gap-2 bg-status-green text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                         >
                           <Check className="w-5 h-5" />
-                          Marcar como Finalizada
+                          Finalizar Tarefa
                         </button>
                       ) : tarefa.status === "Finalizado" ? (
                         <button
-                          onClick={() => setFinalizadoInfo(tarefa)}
-                          className="flex items-center justify-center gap-2 border border-status-green text-status-green rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:bg-status-green-bg active:scale-95 transition-all"
+                          onClick={() => handleReabrirTarefa(tarefa.id)}
+                          className="flex items-center justify-center gap-2 border border-status-cyan text-status-cyan rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                         >
-                          <Check className="w-5 h-5" />
-                          Tarefa Finalizada
+                          <RotateCcw className="w-5 h-5" />
+                          Reabrir Tarefa
                         </button>
                       ) : null}
                     </div>
@@ -491,7 +620,11 @@ export default function DashboardPage() {
                 ))}
                 {tarefas.filter(t => {
                   const s = getStatusEfetivo(t)
-                  return s !== "Finalizado" && (t.urgente || s === "Em Atraso" || favoritasIds.includes(t.id))
+                  const isUrgenteOuAtraso = t.urgente || s === "Em Atraso"
+                  const isFavorita = favoritasIds.includes(t.id)
+                  if (isUrgenteOuAtraso && s !== "Finalizado") return true
+                  if (isFavorita) return true
+                  return false
                 }).length === 0 && (
                   <div className="text-center py-6 text-sincro-text-muted text-sm flex flex-col items-center gap-3">
                     <span>Nenhuma tarefa urgente, em atraso ou favoritada.</span>
@@ -641,7 +774,11 @@ export default function DashboardPage() {
           onReabrir={() => handleReabrirTarefa(selectedTarefa.id)}
           onSave={(tarefaAtualizada) => {
             setTarefas(prev => prev.map(t => t.id === tarefaAtualizada.id ? { ...t, ...tarefaAtualizada } : t))
-            setSelectedTarefa(tarefaAtualizada)
+            setSelectedTarefa(tarefaAtualizada as TarefaDashboard)
+          }}
+          onExcluir={() => {
+            setTarefas(prev => prev.filter(t => t.id !== selectedTarefa.id))
+            setSelectedTarefa(null)
           }}
         />
       )}

@@ -1,9 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/navbar"
 import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
 import { Plus, User } from "lucide-react"
+
+const EQUIPES_STORAGE_KEY = "sincro-equipes-data"
+
+const getEquipesStorage = () => {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(EQUIPES_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const saveEquipesStorage = (equipes: typeof equipesData) => {
+  if (typeof window === "undefined") return
+  localStorage.setItem(EQUIPES_STORAGE_KEY, JSON.stringify(equipes))
+}
 
 const equipesData = [
   {
@@ -140,13 +157,28 @@ export default function EquipesPage() {
   const [selectedEquipe, setSelectedEquipe] = useState<typeof equipesData[0] | null>(null)
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
 
+  const hasLoadedFromStorage = useRef(false)
+
+  useEffect(() => {
+    const saved = getEquipesStorage()
+    if (saved) setEquipes(saved)
+  }, [])
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) {
+      hasLoadedFromStorage.current = true
+      return
+    }
+    saveEquipesStorage(equipes)
+  }, [equipes])
+
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
+    <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="w-[85%] mx-auto py-8">
+      <main className="w-[85%] mx-auto py-8 flex-1 flex flex-col min-h-0">
         {/* CABEÇALHO: Título + Botão na mesma linha */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 shrink-0">
           <h1 className="text-[36px] font-extrabold text-sincro-text-primary leading-none">Suas Equipes</h1>
           <button
             onClick={() => setIsCriarModalOpen(true)}
@@ -158,7 +190,7 @@ export default function EquipesPage() {
         </div>
 
         {/* GRID DE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
           {equipes.map((equipe) => (
             <EquipeCard key={equipe.id} equipe={equipe} onClick={() => setSelectedEquipe(equipe)} />
           ))}
@@ -170,6 +202,10 @@ export default function EquipesPage() {
           isOpen={!!selectedEquipe}
           onClose={() => setSelectedEquipe(null)}
           equipe={selectedEquipe}
+          onSave={(updated) => {
+            setEquipes(prev => prev.map(e => e.id === updated.id ? { ...e, ...updated } : e))
+            setSelectedEquipe({ ...selectedEquipe, ...updated })
+          }}
         />
       )}
 
@@ -179,7 +215,7 @@ export default function EquipesPage() {
         onCriar={(novaEquipe) => {
           const novo = {
             ...equipesData[0],
-            id: equipes.length + 1,
+            id: equipes.length > 0 ? Math.max(...equipes.map(e => e.id)) + 1 : 1,
             nome: novaEquipe.nome,
             gestor: novaEquipe.gestor,
             descricao: novaEquipe.descricao,

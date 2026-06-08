@@ -1,11 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
 import { Search, Plus, Users, ListChecks, Folder, Filter, ChevronDown, Check, X } from "lucide-react"
 import { ProjetoModal, CriarProjetoModal } from "@/components/projeto-modal"
+
+const PROJETOS_STORAGE_KEY = "sincro-projetos-data"
+
+const getProjetosStorage = () => {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(PROJETOS_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const saveProjetosStorage = (projetos: typeof projetosData) => {
+  if (typeof window === "undefined") return
+  localStorage.setItem(PROJETOS_STORAGE_KEY, JSON.stringify(projetos))
+}
+
+const TASKS_STORAGE_KEY = "sincro-tarefas-data"
+
+const getTarefasStorage = (): { projeto?: string; status: string; checklist?: { concluido: boolean }[] }[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(TASKS_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const calcularStatsProjeto = (titulo: string, tarefas: { projeto?: string; status: string; checklist?: { concluido: boolean }[] }[]) => {
+  const tarefasProjeto = tarefas.filter(t => t.projeto === titulo)
+  const total = tarefasProjeto.length
+  const completas = tarefasProjeto.filter(t => t.status === "Finalizado").length
+  const progresso = total > 0 ? Math.round((completas / total) * 100) : 0
+  return { totalTarefas: total, tarefasCompletas: completas, progresso }
+}
 
 const projetosData = [
   {
@@ -182,6 +219,26 @@ export default function ProjetosPage() {
   const [apenasUrgentes, setApenasUrgentes] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
+  const hasLoadedFromStorage = useRef(false)
+
+  useEffect(() => {
+    const saved = getProjetosStorage()
+    if (saved) setProjetos(saved)
+    const tarefas = getTarefasStorage()
+    setProjetos(prev => prev.map(p => {
+      const stats = calcularStatsProjeto(p.titulo, tarefas)
+      return { ...p, ...stats }
+    }))
+  }, [])
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) {
+      hasLoadedFromStorage.current = true
+      return
+    }
+    saveProjetosStorage(projetos)
+  }, [projetos])
+
   const totalProjetos = projetos.length
   const projetosAtivos = projetos.filter(p => p.status === "Em Andamento").length
   const projetosAtraso = projetos.filter(p => p.status === "Em Atraso").length
@@ -202,11 +259,11 @@ export default function ProjetosPage() {
   })
 
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary">
+    <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="p-6">
-        <div className="flex gap-6">
+      <main className="p-6 flex-1 flex flex-col min-h-0">
+        <div className="flex gap-6 flex-1 min-h-0">
           <div className="flex flex-col gap-4">
             <CircularProgress percentage={100} label="Total de Projetos" value={totalProjetos} colors={["#A78BFA", "#7A5BEF", "#5A3E99"]} />
             <CircularProgress
@@ -223,8 +280,8 @@ export default function ProjetosPage() {
             />
           </div>
 
-          <div className="flex-1 space-y-6">
-            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap">
+          <div className="flex-1 flex flex-col min-h-0 space-y-0">
+            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap shrink-0">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />
                 <input
@@ -304,7 +361,7 @@ export default function ProjetosPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
               {filteredProjetos.map((projeto) => (
                 <ProjectCard
                   key={projeto.id}
@@ -344,6 +401,14 @@ export default function ProjetosPage() {
                 : null
             )
           }}
+          onSave={(updated) => {
+            setProjetos(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p))
+            setSelectedProjeto({ ...selectedProjeto, ...updated })
+          }}
+          onExcluir={() => {
+            setProjetos(prev => prev.filter(p => p.id !== selectedProjeto.id))
+            setSelectedProjeto(null)
+          }}
         />
       )}
 
@@ -352,7 +417,7 @@ export default function ProjetosPage() {
         onClose={() => setIsCriarModalOpen(false)}
         onCriar={(novoProjeto) => {
           const novo: typeof projetosData[0] = {
-            id: projetos.length + 1,
+            id: projetos.length > 0 ? Math.max(...projetos.map(p => p.id)) + 1 : 1,
             titulo: novoProjeto.titulo || "Novo Projeto",
             data: new Date().toLocaleDateString("pt-BR"),
             equipe: novoProjeto.equipe || "Equipe Principal",
@@ -470,7 +535,7 @@ function ProjectCard({
   projeto: typeof projetosData[0];
   onClick: () => void;
 }) {
-  const progressoPorcentagem = (projeto.tarefasCompletas / projeto.totalTarefas) * 100
+  const progressoPorcentagem = projeto.totalTarefas > 0 ? (projeto.tarefasCompletas / projeto.totalTarefas) * 100 : 0
 
   return (
     <div

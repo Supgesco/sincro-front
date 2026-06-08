@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Modal } from "@/components/modal"
-import { User, Calendar, Pencil, X, Check, Filter, Play, Send, RotateCcw, Plus, Users, Flag, Sparkles, AlertCircle, ListChecks } from "lucide-react"
+import { User, Calendar, Pencil, X, Check, Filter, Play, Send, RotateCcw, Plus, Users, Flag, Sparkles, AlertCircle, ListChecks, Trash2 } from "lucide-react"
 
 const statusBadgeTarefa: Record<string, string> = {
   "Em Andamento": "bg-status-cyan text-white",
@@ -19,6 +19,7 @@ const COMPLEXIDADE_OPCOES = [
 ] as const
 
 const PROJETOS_DISPONIVEIS = [
+  "Pessoal",
   "Projeto Alpha", "Projeto Beta", "Projeto Gama",
   "Projeto Delta", "Projeto Epsilon", "Projeto Zeta",
 ]
@@ -54,9 +55,35 @@ interface TarefaModalProps {
   onFinalizar?: () => void
   onReabrir?: () => void
   onSave?: (tarefa: Tarefa) => void
+  onExcluir?: () => void
 }
 
-export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onFinalizar, onReabrir, onSave }: TarefaModalProps) {
+const dateToISO = (ddmmmyyyy: string): string => {
+  if (!ddmmmyyyy) return ""
+  const [dia, mes, ano] = ddmmmyyyy.split("/")
+  if (!dia || !mes || !ano) return ""
+  return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`
+}
+
+const isoToDate = (iso: string): string => {
+  if (!iso) return ""
+  const [ano, mes, dia] = iso.split("-")
+  if (!ano || !mes || !dia) return ""
+  return `${dia}/${mes}/${ano}`
+}
+
+export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onFinalizar, onReabrir, onSave, onExcluir }: TarefaModalProps) {
+  const getStatusEfetivo = (t: { status: string; dataEntrega: string }): string => {
+    if (t.status === "Finalizado") return "Finalizado"
+    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
+    const entrega = new Date(ano, mes - 1, dia)
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    if (entrega < hoje) return "Em Atraso"
+    return t.status
+  }
+  const statusEfetivo = getStatusEfetivo(tarefa)
+
   const [checklistItems, setChecklistItems] = useState(tarefa.checklist)
   const [isEditing, setIsEditing] = useState(false)
   const [comentario, setComentario] = useState("")
@@ -70,6 +97,28 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
   const [editMembros, setEditMembros] = useState<string[]>(tarefa.membros)
   const [novoMembro, setNovoMembro] = useState("")
   const [novoChecklistItem, setNovoChecklistItem] = useState("")
+
+  const prevChecklistRef = useRef(tarefa.checklist)
+
+  useEffect(() => {
+    setEditNome(tarefa.nome)
+    setEditDescricao(tarefa.descricao)
+    setEditStatus(tarefa.status)
+    setEditDataEntrega(dateToISO(tarefa.dataEntrega))
+    setEditComplexidade(tarefa.complexidade)
+    setEditUrgente(tarefa.urgente)
+    setEditMembros(tarefa.membros)
+    setChecklistItems(tarefa.checklist)
+    prevChecklistRef.current = tarefa.checklist
+    setIsEditing(false)
+  }, [tarefa.id])
+
+  useEffect(() => {
+    if (!isEditing && onSave && checklistItems !== prevChecklistRef.current) {
+      prevChecklistRef.current = checklistItems
+      onSave({ ...tarefa, checklist: checklistItems })
+    }
+  }, [checklistItems, isEditing])
 
   const toggleChecklistItem = (id: number) => {
     setChecklistItems(prev =>
@@ -89,21 +138,12 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
       nome: editNome,
       descricao: editDescricao,
       status: editStatus,
-      dataEntrega: editDataEntrega,
+      dataEntrega: isoToDate(editDataEntrega),
       complexidade: editComplexidade,
       urgente: editUrgente,
       membros: editMembros,
       checklist: checklistItems,
     }
-
-    tarefa.nome = editNome
-    tarefa.descricao = editDescricao
-    tarefa.status = editStatus
-    tarefa.dataEntrega = editDataEntrega
-    tarefa.complexidade = editComplexidade
-    tarefa.urgente = editUrgente
-    tarefa.membros = editMembros
-    tarefa.checklist = checklistItems
 
     if (onSave) {
       onSave(updated)
@@ -115,10 +155,14 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
     if (!tarefa.aceita) return
     const texto = comentario.trim()
     if (!texto) return
-    tarefa.comentarios = [
-      ...tarefa.comentarios,
-      { autor: "Seu Nome", texto },
-    ]
+    const updated = {
+      ...tarefa,
+      comentarios: [
+        ...tarefa.comentarios,
+        { autor: "Seu Nome", texto },
+      ],
+    }
+    if (onSave) onSave(updated)
     setComentario("")
   }
 
@@ -126,7 +170,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
     setEditNome(tarefa.nome)
     setEditDescricao(tarefa.descricao)
     setEditStatus(tarefa.status)
-    setEditDataEntrega(tarefa.dataEntrega)
+    setEditDataEntrega(dateToISO(tarefa.dataEntrega))
     setEditComplexidade(tarefa.complexidade)
     setEditUrgente(tarefa.urgente)
     setEditMembros(tarefa.membros)
@@ -190,8 +234,8 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   <option value="Em Atraso">Em Atraso</option>
                 </select>
               ) : (
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeTarefa[tarefa.status] ?? "bg-status-cyan text-white"}`}>
-                  {tarefa.status}
+                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeTarefa[statusEfetivo] ?? "bg-status-cyan text-white"}`}>
+                  {statusEfetivo}
                 </span>
               )}
 
@@ -254,11 +298,10 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 <span className="flex items-center gap-1.5 h-7 px-2 rounded-full text-xs border border-sincro-border bg-sincro-bg-input text-sincro-text-primary">
                   <Calendar className="w-3.5 h-3.5" />
                   <input
-                    type="text"
+                    type="date"
                     value={editDataEntrega}
                     onChange={(e) => setEditDataEntrega(e.target.value)}
-                    className="bg-transparent border-none text-sincro-text-primary focus:outline-none w-20 text-xs"
-                    placeholder="Data"
+                    className="bg-transparent border-none text-sincro-text-primary focus:outline-none text-xs"
                   />
                 </span>
                 <select
@@ -286,9 +329,21 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   <Calendar className="w-3.5 h-3.5" />
                   {tarefa.dataEntrega}
                 </span>
-                <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-red text-white font-semibold">
-                  Em Atraso
-                </span>
+                {statusEfetivo === "Em Atraso" && (
+                  <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-red text-white font-semibold">
+                    Em Atraso
+                  </span>
+                )}
+                {statusEfetivo === "Não Iniciado" && (
+                  <span className="flex items-center h-7 px-3 rounded-full text-xs bg-sincro-text-secondary/40 text-sincro-text-primary font-semibold">
+                    Não Iniciado
+                  </span>
+                )}
+                {statusEfetivo === "Em Andamento" && (
+                  <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-cyan text-white font-semibold">
+                    Em Andamento
+                  </span>
+                )}
                 <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-yellow text-[#583f99] font-semibold">
                   {tarefa.complexidade}
                 </span>
@@ -452,6 +507,15 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 >
                   Cancelar
                 </button>
+                {onExcluir && (
+                  <button
+                    onClick={onExcluir}
+                    className="ml-auto flex items-center gap-2 px-4 py-2 rounded-full border border-status-red text-status-red hover:bg-status-red-bg active:scale-95 transition-all text-sm font-bold"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Excluir
+                  </button>
+                )}
               </div>
             ) : (
               <div>
@@ -474,7 +538,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 ) : tarefa.status === "Finalizado" && onReabrir ? (
                   <button
                     onClick={onReabrir}
-                    className="flex items-center gap-2 h-12 px-6 rounded-full bg-status-green text-white hover:brightness-110 active:scale-95 transition-all text-base font-extrabold"
+                    className="flex items-center gap-2 h-12 px-6 rounded-full border border-status-cyan text-status-cyan hover:bg-status-cyan-bg active:scale-95 transition-all text-base font-extrabold"
                   >
                     <RotateCcw className="w-5 h-5" />
                     Reabrir Tarefa
@@ -589,12 +653,22 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
   const [complexidade, setComplexidade] = useState<string>("Média Complexidade")
   const [urgente, setUrgente] = useState(false)
   const [touched, setTouched] = useState(false)
+  const [projetosDisponiveis, setProjetosDisponiveis] = useState(PROJETOS_DISPONIVEIS)
 
   useEffect(() => {
     if (isOpen) {
+      try {
+        const raw = localStorage.getItem("sincro-projetos-data")
+        if (raw) {
+          const projetos = JSON.parse(raw) as { titulo: string }[]
+          const nomes = projetos.map(p => p.titulo)
+          const merged = ["Pessoal", ...Array.from(new Set([...PROJETOS_DISPONIVEIS.filter(p => p !== "Pessoal"), ...nomes]))]
+          setProjetosDisponiveis(merged)
+        }
+      } catch {}
       setNome("")
       setDescricao("")
-      setProjeto(PROJETOS_DISPONIVEIS[0])
+      setProjeto("Pessoal")
       setMembros([])
       setStatus("Não Iniciado")
       setDataEntrega("")
@@ -713,7 +787,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
                   onChange={(e) => setProjeto(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
                 >
-                  {PROJETOS_DISPONIVEIS.map((p) => (
+                  {projetosDisponiveis.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}
                 </select>

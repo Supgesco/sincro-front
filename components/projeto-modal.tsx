@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "./modal"
-import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check } from "lucide-react"
+import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check, Trash2 } from "lucide-react"
 
 const statusCorProjeto: Record<string, string> = {
   "Em Andamento": "text-status-cyan",
@@ -39,6 +39,8 @@ interface Projeto {
   id: number
   titulo: string
   data: string
+  equipe?: string
+  progresso?: number
   criador: string
   status: string
   urgente: boolean
@@ -56,9 +58,10 @@ interface ProjetoModalProps {
   onVerTarefas?: () => void
   onMarcarFinalizado?: () => void
   onSave?: (projeto: Projeto) => void
+  onExcluir?: () => void
 }
 
-export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarFinalizado, onSave }: ProjetoModalProps) {
+export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarFinalizado, onSave, onExcluir }: ProjetoModalProps) {
   const [comentario, setComentario] = useState("")
   const [comentarios, setComentarios] = useState(projeto.comentarios)
 
@@ -75,7 +78,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
     setComentarios(projeto.comentarios)
   }, [projeto])
 
-  const progresso = (projeto.tarefasCompletas / projeto.totalTarefas) * 100
+  const progresso = projeto.totalTarefas > 0 ? (projeto.tarefasCompletas / projeto.totalTarefas) * 100 : 0
 
   const handleAddComentario = () => {
     if (!comentario.trim()) return
@@ -288,6 +291,15 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                 >
                   Cancelar
                 </button>
+                {onExcluir && (
+                  <button 
+                    onClick={onExcluir}
+                    className="ml-auto flex items-center gap-2 border border-status-red text-status-red rounded-full px-4 py-2 text-sm font-bold hover:bg-status-red-bg active:scale-95 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Excluir
+                  </button>
+                )}
               </>
             ) : (
               <>

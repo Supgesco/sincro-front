@@ -236,3 +236,12 @@
 @utility bg-sincro-team-card {
   background: linear-gradient(135deg, var(--sincro-team-card-from) 0%, var(--sincro-team-card-to) 100%);
 }
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@utility animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}

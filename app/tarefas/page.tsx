@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
 import { Modal } from "@/components/modal"
 import { TarefaModal, CriarTarefaModal } from "@/components/tarefa-modal"
-import { Plus, Search, Check, Play, X, User, Calendar, Folder, Eye, Star, Users, Filter, ListChecks, ChevronDown, ListTodo } from "lucide-react"
+import { Plus, Search, Check, Play, X, User, Calendar, Folder, Eye, Star, Users, Filter, ListChecks, ChevronDown, ListTodo, RotateCcw } from "lucide-react"
+import { useToast } from "@/components/toast"
 
 const STORAGE_KEY = "sincro-tarefas-finalizadas"
 
@@ -67,6 +68,23 @@ const removeFavorita = (id: number) => {
   localStorage.setItem(FAVORITAS_KEY, JSON.stringify(existing.filter(fid => fid !== id)))
 }
 
+const TAREFAS_KEY = "sincro-tarefas-data"
+
+const getTarefasStorage = (): Tarefa[] | null => {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(TAREFAS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const saveTarefasStorage = (tarefas: Tarefa[]) => {
+  if (typeof window === "undefined") return
+  localStorage.setItem(TAREFAS_KEY, JSON.stringify(tarefas))
+}
+
 const complexidadeCor: Record<string, string> = {
   "Baixa Complexidade": "bg-status-green-bg text-status-green border-status-green/40",
   "Média Complexidade": "bg-status-yellow-bg text-status-yellow border-status-yellow/40",
@@ -119,7 +137,7 @@ const tarefasData: Tarefa[] = [
     equipe: "Equipe Dev",
     dataCriacao: "25 de janeiro, 2025",
     dataEntrega: "12/04/2026",
-    status: "Em Andamento",
+    status: "Não Iniciado",
     complexidade: "Média Complexidade",
     urgente: true,
     progresso: { atual: 2, total: 4 },
@@ -136,21 +154,22 @@ const tarefasData: Tarefa[] = [
     ],
     aceita: false
   },
-  { id: 2, nome: "Nome da Tarefa 2", criador: "Seu Nome", projeto: "Projeto Alpha", equipe: "Equipe Dev", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Média Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 2", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 2, nome: "Nome da Tarefa 2", criador: "Seu Nome", projeto: "Projeto Alpha", equipe: "Equipe Dev", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Média Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 2", checklist: [], membros: [], comentarios: [], aceita: false },
   { id: 3, nome: "Nome da Tarefa 3", criador: "Seu Nome", projeto: "Projeto Beta", equipe: "Equipe QA", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 3", checklist: [], membros: [], comentarios: [], aceita: true },
   { id: 4, nome: "Nome da Tarefa 4", criador: "Seu Nome", projeto: "Projeto Gama", equipe: "Equipe Design", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Baixa Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 4", checklist: [], membros: [], comentarios: [], aceita: true },
   { id: 5, nome: "Nome da Tarefa 5", criador: "Seu Nome", projeto: "Projeto Delta", equipe: "Equipe Marketing", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Média Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 5", checklist: [], membros: [], comentarios: [], aceita: true },
-  { id: 6, nome: "Nome da Tarefa 6", criador: "Seu Nome", projeto: "Projeto Epsilon", equipe: "Equipe Ops", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 6", checklist: [], membros: [], comentarios: [], aceita: false },
-  { id: 7, nome: "Nome da Tarefa 7", criador: "Seu Nome", projeto: "Projeto Zeta", equipe: "Equipe Dados", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Baixa Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 7", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 6, nome: "Nome da Tarefa 6", criador: "Seu Nome", projeto: "Projeto Epsilon", equipe: "Equipe Ops", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 6", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 7, nome: "Nome da Tarefa 7", criador: "Seu Nome", projeto: "Projeto Zeta", equipe: "Equipe Dados", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Baixa Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 7", checklist: [], membros: [], comentarios: [], aceita: false },
 ]
 
 function TarefasContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectFilter = searchParams.get("projeto")
+  const { toast, notificar } = useToast()
 
   const [selectedTarefa, setSelectedTarefa] = useState<Tarefa | null>(null)
-  const [tarefas, setTarefas] = useState(tarefasData)
+  const [tarefas, setTarefas] = useState<Tarefa[]>(tarefasData)
   const [searchTerm, setSearchTerm] = useState("")
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
   const [finalizadoInfo, setFinalizadoInfo] = useState<Tarefa | null>(null)
@@ -170,24 +189,55 @@ function TarefasContent() {
   }, [searchParams])
 
   useEffect(() => {
-    const finalized = getFinalized()
-    setTarefas(prev => prev.map(t => {
-      const f = finalized[t.id]
-      if (f) {
-        return { ...t, status: "Finalizado", finalizadoPor: f.finalizadoPor, finalizadoEm: f.finalizadoEm }
-      }
-      return t
-    }))
-    setFavoritasIds(getFavoritas())
-  }, [])
-
-  useEffect(() => {
     const handleStorage = () => {
       setFavoritasIds(getFavoritas())
     }
     window.addEventListener("storage", handleStorage)
     return () => window.removeEventListener("storage", handleStorage)
   }, [])
+
+  const hasLoadedFromStorage = useRef(false)
+
+  useEffect(() => {
+    const saved = getTarefasStorage()
+    if (saved) setTarefas(saved)
+    const finalized = getFinalized()
+    setFavoritasIds(getFavoritas())
+    if (saved) {
+      setTarefas(prev => {
+        const updated = prev.map(t => {
+          const f = finalized[t.id]
+          if (f && t.aceita) {
+            return { ...t, status: "Finalizado", finalizadoPor: f.finalizadoPor, finalizadoEm: f.finalizadoEm }
+          }
+          if (f && !t.aceita) {
+            removeFinalized(t.id)
+          }
+          return t
+        })
+        const atrasadas = updated.filter(t => {
+          if (t.status === "Finalizado") return false
+          const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
+          const entrega = new Date(ano, mes - 1, dia)
+          const hoje = new Date()
+          hoje.setHours(0, 0, 0, 0)
+          return entrega < hoje
+        })
+        if (atrasadas.length > 0) {
+          notificar(`${atrasadas.length} tarefa(s) em atraso!`, "warning")
+        }
+        return updated
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hasLoadedFromStorage.current) {
+      hasLoadedFromStorage.current = true
+      return
+    }
+    saveTarefasStorage(tarefas)
+  }, [tarefas])
 
   const handleToggleFavorita = (id: number) => {
     if (favoritasIds.includes(id)) {
@@ -200,13 +250,15 @@ function TarefasContent() {
   }
 
   const handleAceitarTarefa = (id: number) => {
-    setTarefas(prev => prev.map(t => t.id === id ? { ...t, aceita: true } : t))
-    setSelectedTarefa(prev => prev ? { ...prev, aceita: true } : null)
+    setTarefas(prev => prev.map(t => t.id === id ? { ...t, aceita: true, status: t.status === "Finalizado" ? "Em Andamento" : t.status } : t))
+    setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, aceita: true, status: prev.status === "Finalizado" ? "Em Andamento" : prev.status } : prev)
+    toast("Tarefa aceita com sucesso!", "success")
   }
 
   const handleIniciarTarefa = (id: number) => {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
+    toast("Tarefa iniciada!", "info")
   }
 
   const handleFinalizarTarefa = (id: number) => {
@@ -220,12 +272,14 @@ function TarefasContent() {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Finalizado", finalizadoPor: "Seu Nome", finalizadoEm: dataFinalizacao } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Finalizado", finalizadoPor: "Seu Nome", finalizadoEm: dataFinalizacao } : prev)
     saveFinalized(id, "Seu Nome", dataFinalizacao)
+    toast("Tarefa finalizada com sucesso!", "success")
   }
 
   const handleReabrirTarefa = (id: number) => {
     setTarefas(prev => prev.map(t => t.id === id ? { ...t, status: "Em Andamento" } : t))
     setSelectedTarefa(prev => prev && prev.id === id ? { ...prev, status: "Em Andamento" } : prev)
     removeFinalized(id)
+    toast("Tarefa reaberta!", "info")
   }
 
   const getStatusEfetivo = (t: Tarefa): string => {
@@ -253,20 +307,20 @@ function TarefasContent() {
   const filteredTarefas = tarefas.filter(t => {
     const statusEfetivo = getStatusEfetivo(t)
     const matchSearch = t.nome.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchProject = projetoFilter.length === 0 || projetoFilter.includes(t.projeto || "")
+    const matchProject = projetoFilter.length === 0 || projetoFilter.includes(t.projeto || "Pessoal")
     const matchEquipe = equipeFilter.length === 0 || equipeFilter.includes(t.equipe || "")
-    const matchStatus = statusFilter.length === 0 || statusFilter.includes(statusEfetivo)
+    const matchStatus = statusFilter.length === 0 || statusFilter.includes(statusEfetivo) || statusFilter.includes(t.status)
     const matchComplexidade = complexidadeFilter.length === 0 || complexidadeFilter.includes(t.complexidade)
     const matchUrgente = !apenasUrgentes || t.urgente
     return matchSearch && matchProject && matchEquipe && matchStatus && matchComplexidade && matchUrgente
   })
 
   return (
-    <div className="min-h-screen bg-sincro-bg text-sincro-text-primary flex flex-col">
+    <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
       <Navbar />
 
-      <main className="p-6 flex-1 flex flex-col">
-        <div className="flex gap-6 flex-1">
+      <main className="p-6 flex-1 flex flex-col min-h-0">
+        <div className="flex gap-6 flex-1 min-h-0">
           {/* Coluna Esquerda — Indicadores Circulares */}
           <div className="flex flex-col gap-4">
             <CircularProgress
@@ -307,7 +361,7 @@ function TarefasContent() {
                 id="projeto"
                 label="Projeto"
                 icon={Folder}
-                options={Array.from(new Set(tarefas.map(t => t.projeto).filter(Boolean))) as string[]}
+                options={Array.from(new Set(["Pessoal", ...tarefas.map(t => t.projeto).filter(Boolean)])) as string[]}
                 selected={projetoFilter}
                 onChange={(next) => {
                   setProjetoFilter(next)
@@ -419,10 +473,15 @@ function TarefasContent() {
                       <div className="flex flex-col justify-center min-w-0 flex-1">
                         <h3 className="font-bold text-xl text-sincro-text-primary truncate">{tarefa.nome}</h3>
                         <div className="flex items-center gap-2 mt-1 text-sm text-sincro-text-secondary min-w-0 flex-wrap">
-                          {tarefa.projeto && <span className="truncate">{tarefa.projeto}</span>}
-                          {tarefa.projeto && <span className="opacity-50">•</span>}
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${statusBadgeSolidCor[tarefa.status] || "bg-sincro-text-secondary/40"
-                            }`}>{tarefa.status}</span>
+                          <span className="truncate">{tarefa.projeto || "Pessoal"}</span>
+                          <span className="opacity-50">•</span>
+                          {(() => {
+                            const s = getStatusEfetivo(tarefa)
+                            return (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] text-white font-extrabold shrink-0 ${statusBadgeSolidCor[s] || "bg-sincro-text-secondary/40"
+                                }`}>{s}</span>
+                            )
+                          })()}
                           {tarefa.checklist.length > 0 && (() => {
                             const concluidas = tarefa.checklist.filter(c => c.concluido).length
                             const total = tarefa.checklist.length
@@ -483,15 +542,15 @@ function TarefasContent() {
                             className="flex items-center justify-center gap-2 bg-status-green text-white rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                           >
                             <Check className="w-5 h-5" />
-                            Marcar como Finalizada
+                            Finalizar Tarefa
                           </button>
                         ) : tarefa.status === "Finalizado" ? (
                           <button
-                            onClick={() => setFinalizadoInfo(tarefa)}
-                            className="flex items-center justify-center gap-2 border border-status-green text-status-green rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
+                            onClick={() => handleReabrirTarefa(tarefa.id)}
+                            className="flex items-center justify-center gap-2 border border-status-cyan text-status-cyan rounded-full h-12 px-6 w-[220px] whitespace-nowrap text-base font-extrabold hover:scale-[1.03] hover:shadow-lg active:scale-95 transition-all"
                           >
-                            <Check className="w-5 h-5" />
-                            Tarefa Finalizada
+                            <RotateCcw className="w-5 h-5" />
+                            Reabrir Tarefa
                           </button>
                         ) : null}
                       </div>
@@ -513,6 +572,14 @@ function TarefasContent() {
           onIniciar={() => handleIniciarTarefa(selectedTarefa.id)}
           onFinalizar={() => handleFinalizarTarefa(selectedTarefa.id)}
           onReabrir={() => handleReabrirTarefa(selectedTarefa.id)}
+          onSave={(updated) => {
+            setTarefas(prev => prev.map(t => t.id === updated.id ? updated : t))
+            setSelectedTarefa(updated)
+          }}
+          onExcluir={() => {
+            setTarefas(prev => prev.filter(t => t.id !== selectedTarefa.id))
+            setSelectedTarefa(null)
+          }}
         />
       )}
 
@@ -590,7 +657,7 @@ function TarefasContent() {
             ? novaTarefa.dataEntregaISO.split("-").reverse().join("/")
             : dataCriacao
           const novo: Tarefa = {
-            id: tarefas.length + 1,
+            id: tarefas.length > 0 ? Math.max(...tarefas.map(t => t.id)) + 1 : 1,
             nome: novaTarefa.nome || "Nova Tarefa",
             criador: "Seu Nome",
             projeto: novaTarefa.projeto,

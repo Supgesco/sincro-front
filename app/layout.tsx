@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Poppins } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/contexts/theme-context'
+import { ToastProvider } from '@/components/toast'
 import './globals.css'
 
 const poppins = Poppins({ 
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark">
       <body className={`${poppins.className} antialiased`}>
         <ThemeProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
