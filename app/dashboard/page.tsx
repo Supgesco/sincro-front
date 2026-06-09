@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
 import { Modal } from "@/components/modal"
 import { TarefaModal } from "@/components/tarefa-modal"
-import { Check, ChevronLeft, ChevronRight, Play, X, User, Calendar, Folder, Eye, Star, ListTodo, RotateCcw } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Play, X, User, Calendar, Folder, Eye, Star, ListTodo, RotateCcw, Plus } from "lucide-react"
 import { useToast } from "@/components/toast"
 
 const STORAGE_KEY = "sincro-tarefas-finalizadas"
@@ -85,6 +85,41 @@ const saveTarefasStorage = (tarefas: TarefaDashboard[]) => {
   localStorage.setItem(TAREFAS_KEY, JSON.stringify(tarefas))
 }
 
+const PROJETOS_KEY = "sincro-projetos-data"
+
+const getProjetosStorage = (): ProjetoDashboard[] | null => {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = localStorage.getItem(PROJETOS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const LEMBRETES_KEY = "sincro-lembretes"
+
+type Lembrete = {
+  id: number
+  texto: string
+  data: string
+}
+
+const getLembretesStorage = (): Lembrete[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(LEMBRETES_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const saveLembretesStorage = (lembretes: Lembrete[]) => {
+  if (typeof window === "undefined") return
+  localStorage.setItem(LEMBRETES_KEY, JSON.stringify(lembretes))
+}
+
 const complexidadeCor: Record<string, string> = {
   "Baixa Complexidade": "bg-status-green-bg text-status-green border-status-green/40",
   "Média Complexidade": "bg-status-yellow-bg text-status-yellow border-status-yellow/40",
@@ -124,6 +159,25 @@ type TarefaDashboard = {
   aceita: boolean
   equipe?: string
   projeto?: string
+  mostrarNoCalendario?: boolean
+}
+
+type ProjetoDashboard = {
+  id: number
+  titulo: string
+  data: string
+  prazo?: string
+  equipe?: string
+  progresso?: number
+  criador: string
+  status: string
+  urgente: boolean
+  complexidade: number
+  descricao: string
+  tarefasCompletas: number
+  totalTarefas: number
+  comentarios: { autor: string; texto: string }[]
+  mostrarNoCalendario?: boolean
 }
 
 const tarefasData: TarefaDashboard[] = [
@@ -264,7 +318,7 @@ const MESES_ABREV = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SE
 
 type DiaAgenda = {
   date: Date
-  eventos: { nome: string; cor: string }[]
+  eventos: { nome: string; cor: string; id?: number; tipo?: "tarefa" | "projeto" | "lembrete" }[]
 }
 
 const HOJE_BASE = (() => {
@@ -287,7 +341,7 @@ const eventosBaseOffset: Record<number, { nome: string; cor: string }[]> = {
 const chaveData = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 
-const eventosPorData: Record<string, { nome: string; cor: string }[]> = Object.fromEntries(
+const eventosPorData: Record<string, { nome: string; cor: string; id?: number; tipo?: "tarefa" | "projeto" }[]> = Object.fromEntries(
   Object.entries(eventosBaseOffset).map(([offset, eventos]) => [
     chaveData(addDays(HOJE_BASE, parseInt(offset))),
     eventos,
@@ -297,17 +351,28 @@ const eventosPorData: Record<string, { nome: string; cor: string }[]> = Object.f
 export default function DashboardPage() {
   const { toast, notificar } = useToast()
   const [tarefas, setTarefas] = useState<TarefaDashboard[]>(tarefasData)
+  const [projetos, setProjetos] = useState<ProjetoDashboard[]>([])
+  const [lembretes, setLembretes] = useState<Lembrete[]>([])
   const [selectedTarefa, setSelectedTarefa] = useState<typeof tarefasData[0] | null>(null)
   const [finalizadoInfo, setFinalizadoInfo] = useState<typeof tarefasData[0] | null>(null)
   const [semanaInicio, setSemanaInicio] = useState<Date>(HOJE_BASE)
   const [leavingIds, setLeavingIds] = useState<Set<number>>(new Set())
   const [favoritasIds, setFavoritasIds] = useState<number[]>([])
+  const [showCalendarModal, setShowCalendarModal] = useState(false)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>("")
+  const [calendarModalType, setCalendarModalType] = useState<"tarefa" | "projeto" | "lembrete" | null>(null)
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
+  const [lembreteTexto, setLembreteTexto] = useState("")
 
   const hasLoadedFromStorage = useRef(false)
 
   useEffect(() => {
     const saved = getTarefasStorage()
     if (saved) setTarefas(saved)
+    const savedProjetos = getProjetosStorage()
+    if (savedProjetos) setProjetos(savedProjetos)
+    const savedLembretes = getLembretesStorage()
+    setLembretes(savedLembretes)
     const finalized = getFinalized()
     setFavoritasIds(getFavoritas())
     if (saved) {
@@ -353,6 +418,10 @@ export default function DashboardPage() {
     }
     saveTarefasStorage(tarefas)
   }, [tarefas])
+
+  useEffect(() => {
+    saveLembretesStorage(lembretes)
+  }, [lembretes])
 
   const handleToggleFavorita = (id: number) => {
     if (favoritasIds.includes(id)) {
@@ -431,11 +500,109 @@ export default function DashboardPage() {
     toast("Tarefa reaberta!", "info")
   }
 
+  const handleRemoveEventoCalendario = (tipo: "tarefa" | "projeto" | "lembrete", id: number) => {
+    if (tipo === "tarefa") {
+      setTarefas(prev => prev.map(t => t.id === id ? { ...t, mostrarNoCalendario: false } : t))
+      toast("Tarefa removida do calendário!", "info")
+    } else if (tipo === "projeto") {
+      setProjetos(prev => prev.map(p => p.id === id ? { ...p, mostrarNoCalendario: false } : p))
+      toast("Projeto removido do calendário!", "info")
+    } else {
+      setLembretes(prev => prev.filter(l => l.id !== id))
+      toast("Lembrete removido!", "info")
+    }
+  }
+
+  const handleAddEventoCalendario = () => {
+    if (calendarModalType === "lembrete") {
+      if (!lembreteTexto.trim()) {
+        toast("Digite o texto do lembrete!", "warning")
+        return
+      }
+      const novoLembrete: Lembrete = {
+        id: Date.now(),
+        texto: lembreteTexto.trim(),
+        data: selectedCalendarDate,
+      }
+      setLembretes(prev => [...prev, novoLembrete])
+    } else if (calendarModalType === "tarefa" && selectedItemId) {
+      setTarefas(prev => prev.map(t => t.id === selectedItemId ? { ...t, mostrarNoCalendario: true, dataEntrega: selectedCalendarDate } : t))
+    } else if (calendarModalType === "projeto" && selectedItemId) {
+      setProjetos(prev => prev.map(p => p.id === selectedItemId ? { ...p, mostrarNoCalendario: true, prazo: selectedCalendarDate } : p))
+    } else {
+      toast("Selecione um item!", "warning")
+      return
+    }
+    setShowCalendarModal(false)
+    setCalendarModalType(null)
+    setSelectedItemId(null)
+    setLembreteTexto("")
+    toast("Item adicionado ao calendário!", "success")
+  }
+
+  const handleOpenCalendarModal = (date?: Date) => {
+    const targetDate = date || new Date()
+    const dia = targetDate.getDate().toString().padStart(2, "0")
+    const mes = (targetDate.getMonth() + 1).toString().padStart(2, "0")
+    const ano = targetDate.getFullYear()
+    setSelectedCalendarDate(`${dia}/${mes}/${ano}`)
+    setCalendarModalType(null)
+    setSelectedItemId(null)
+    setLembreteTexto("")
+    setShowCalendarModal(true)
+  }
+
+  const getEventosCalendario = (): Record<string, { nome: string; cor: string; id?: number; tipo?: "tarefa" | "projeto" | "lembrete" }[]> => {
+    const eventos: Record<string, { nome: string; cor: string; id?: number; tipo?: "tarefa" | "projeto" | "lembrete" }[]> = { ...eventosPorData }
+
+    lembretes.forEach(lembrete => {
+      const [dia, mes, ano] = lembrete.data.split("/").map(Number)
+      if (dia && mes && ano) {
+        const data = new Date(ano, mes - 1, dia)
+        const chave = chaveData(data)
+        if (!eventos[chave]) eventos[chave] = []
+        eventos[chave].push({ nome: lembrete.texto, cor: "bg-status-yellow/80", id: lembrete.id, tipo: "lembrete" })
+      }
+    })
+
+    tarefas.forEach(tarefa => {
+      if (tarefa.mostrarNoCalendario && tarefa.dataEntrega) {
+        const [dia, mes, ano] = tarefa.dataEntrega.split("/").map(Number)
+        if (dia && mes && ano) {
+          const data = new Date(ano, mes - 1, dia)
+          const chave = chaveData(data)
+          if (!eventos[chave]) eventos[chave] = []
+          const cor = tarefa.status === "Finalizado" ? "bg-status-green/80" :
+                     tarefa.urgente ? "bg-status-red/80" : "bg-status-cyan/80"
+          eventos[chave].push({ nome: tarefa.nome, cor, id: tarefa.id, tipo: "tarefa" })
+        }
+      }
+    })
+
+    projetos.forEach(projeto => {
+      if (projeto.mostrarNoCalendario && projeto.prazo) {
+        const [dia, mes, ano] = projeto.prazo.split("/").map(Number)
+        if (dia && mes && ano) {
+          const data = new Date(ano, mes - 1, dia)
+          const chave = chaveData(data)
+          if (!eventos[chave]) eventos[chave] = []
+          const cor = projeto.status === "Finalizado" ? "bg-status-green/80" :
+                     projeto.urgente ? "bg-status-orange/80" : "bg-purple-500/80"
+          eventos[chave].push({ nome: projeto.titulo, cor, id: projeto.id, tipo: "projeto" })
+        }
+      }
+    })
+
+    return eventos
+  }
+
+  const eventosCalendario = getEventosCalendario()
+
   const diasAgenda: DiaAgenda[] = Array.from({ length: 14 }, (_, i) => {
     const date = addDays(semanaInicio, i)
     return {
       date,
-      eventos: eventosPorData[chaveData(date)] || [],
+      eventos: eventosCalendario[chaveData(date)] || [],
     }
   })
 
@@ -663,6 +830,13 @@ export default function DashboardPage() {
                       Hoje
                     </button>
                   )}
+                  <button
+                    onClick={() => handleOpenCalendarModal()}
+                    className="flex items-center gap-1 bg-status-cyan text-white rounded-full px-3 py-1 text-[10px] font-bold hover:bg-status-cyan/80 active:scale-95 transition-all"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Adicionar
+                  </button>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-2">
@@ -675,7 +849,8 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={index}
-                      className={`border rounded-xl p-2 min-h-[80px] ${isHoje
+                      onClick={() => handleOpenCalendarModal(item.date)}
+                      className={`border rounded-xl p-2 min-h-[80px] cursor-pointer hover:bg-white/10 transition-colors ${isHoje
                           ? "border-status-cyan bg-status-cyan/10"
                           : "border-sincro-border bg-white/5"
                         }`}
@@ -698,9 +873,20 @@ export default function DashboardPage() {
                         {item.eventos.map((evento, idx) => (
                           <div
                             key={idx}
-                            className={`text-[10px] ${evento.cor} text-white px-1.5 py-0.5 rounded-md truncate font-semibold`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (evento.id && evento.tipo) {
+                                handleRemoveEventoCalendario(evento.tipo, evento.id)
+                              }
+                            }}
+                            className={`text-[10px] ${evento.cor} text-white px-1.5 py-0.5 rounded-md truncate font-semibold flex items-center justify-between group ${
+                              evento.id ? "hover:bg-white/20 cursor-pointer" : ""
+                            }`}
                           >
-                            {evento.nome}
+                            <span className="truncate">{evento.nome}</span>
+                            {evento.id && (
+                              <X className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
+                            )}
                           </div>
                         ))}
                       </div>
@@ -836,6 +1022,162 @@ export default function DashboardPage() {
                 className="h-10 px-5 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all self-end"
               >
                 Fechar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {showCalendarModal && (
+        <Modal
+          isOpen={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          className="w-[min(450px,92vw)] rounded-2xl overflow-hidden"
+        >
+          <div className="bg-sincro-modal-bg dark:bg-sincro-dark-gradient text-sincro-modal-text">
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-sincro-border">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-full flex items-center justify-center bg-status-cyan-bg text-status-cyan">
+                  <Calendar className="w-4 h-4" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-extrabold">Adicionar ao Calendário</h2>
+                  <p className="text-xs text-sincro-text-secondary">Selecione a data e o tipo de item</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCalendarModal(false)}
+                className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                aria-label="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={(() => {
+                    const [dia, mes, ano] = selectedCalendarDate.split("/")
+                    return `${ano}-${mes}-${dia}`
+                  })()}
+                  onChange={(e) => {
+                    const [ano, mes, dia] = e.target.value.split("-")
+                    setSelectedCalendarDate(`${dia}/${mes}/${ano}`)
+                  }}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-2 block">
+                  Tipo de Item
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => { setCalendarModalType("lembrete"); setSelectedItemId(null) }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-colors ${
+                      calendarModalType === "lembrete"
+                        ? "border-status-yellow bg-status-yellow/10"
+                        : "border-sincro-border hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-status-yellow/20 text-status-yellow">
+                      <Calendar className="w-4 h-4" />
+                    </span>
+                    <span className="text-xs font-bold">Lembrete</span>
+                  </button>
+                  <button
+                    onClick={() => { setCalendarModalType("tarefa"); setSelectedItemId(null) }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-colors ${
+                      calendarModalType === "tarefa"
+                        ? "border-status-cyan bg-status-cyan/10"
+                        : "border-sincro-border hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-status-cyan/20 text-status-cyan">
+                      <ListTodo className="w-4 h-4" />
+                    </span>
+                    <span className="text-xs font-bold">Tarefa</span>
+                  </button>
+                  <button
+                    onClick={() => { setCalendarModalType("projeto"); setSelectedItemId(null) }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-colors ${
+                      calendarModalType === "projeto"
+                        ? "border-purple-400 bg-purple-500/10"
+                        : "border-sincro-border hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 text-purple-400">
+                      <Folder className="w-4 h-4" />
+                    </span>
+                    <span className="text-xs font-bold">Projeto</span>
+                  </button>
+                </div>
+              </div>
+
+              {calendarModalType === "lembrete" && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
+                    Texto do Lembrete
+                  </label>
+                  <input
+                    type="text"
+                    value={lembreteTexto}
+                    onChange={(e) => setLembreteTexto(e.target.value)}
+                    placeholder="Ex.: Reunião com cliente"
+                    className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none focus:border-sincro-text-muted transition-colors"
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {calendarModalType === "tarefa" && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
+                    Selecionar Tarefa Existente
+                  </label>
+                  <select
+                    value={selectedItemId || ""}
+                    onChange={(e) => setSelectedItemId(Number(e.target.value) || null)}
+                    className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                  >
+                    <option value="">Selecione uma tarefa...</option>
+                    {tarefas.filter(t => !t.mostrarNoCalendario).map(t => (
+                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {calendarModalType === "projeto" && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
+                    Selecionar Projeto Existente
+                  </label>
+                  <select
+                    value={selectedItemId || ""}
+                    onChange={(e) => setSelectedItemId(Number(e.target.value) || null)}
+                    className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                  >
+                    <option value="">Selecione um projeto...</option>
+                    {projetos.filter(p => !p.mostrarNoCalendario).map(p => (
+                      <option key={p.id} value={p.id}>{p.titulo}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <button
+                onClick={handleAddEventoCalendario}
+                disabled={!calendarModalType || (calendarModalType !== "lembrete" && !selectedItemId)}
+                className="w-full h-11 rounded-xl bg-status-cyan text-white text-sm font-extrabold hover:bg-status-cyan/80 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Adicionar ao Calendário
               </button>
             </div>
           </div>

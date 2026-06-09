@@ -8,6 +8,7 @@ import { Search, Plus, Users, ListChecks, Folder, Filter, ChevronDown, Check, X 
 import { ProjetoModal, CriarProjetoModal } from "@/components/projeto-modal"
 
 const PROJETOS_STORAGE_KEY = "sincro-projetos-data"
+const EQUIPES_STORAGE_KEY = "sincro-equipes-data"
 
 const getProjetosStorage = () => {
   if (typeof window === "undefined") return null
@@ -31,6 +32,18 @@ const getTarefasStorage = (): { projeto?: string; status: string; checklist?: { 
   try {
     const raw = localStorage.getItem(TASKS_STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const getEquipesStorage = (): string[] => {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(EQUIPES_STORAGE_KEY)
+    if (!raw) return []
+    const parsed: { nome: string }[] = JSON.parse(raw)
+    return parsed.map(e => e.nome)
   } catch {
     return []
   }
@@ -218,6 +231,7 @@ export default function ProjetosPage() {
   const [complexidadeFilter, setComplexidadeFilter] = useState<string[]>([])
   const [apenasUrgentes, setApenasUrgentes] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [equipesDisponiveis, setEquipesDisponiveis] = useState<string[]>([])
 
   const hasLoadedFromStorage = useRef(false)
 
@@ -229,6 +243,9 @@ export default function ProjetosPage() {
       const stats = calcularStatsProjeto(p.titulo, tarefas)
       return { ...p, ...stats }
     }))
+    // Carrega equipes criadas pelo usuário
+    const nomeEquipes = getEquipesStorage()
+    if (nomeEquipes.length > 0) setEquipesDisponiveis(nomeEquipes)
   }, [])
 
   useEffect(() => {
@@ -415,6 +432,7 @@ export default function ProjetosPage() {
       <CriarProjetoModal
         isOpen={isCriarModalOpen}
         onClose={() => setIsCriarModalOpen(false)}
+        equipesDisponiveis={equipesDisponiveis}
         onCriar={(novoProjeto) => {
           const novo: typeof projetosData[0] = {
             id: projetos.length > 0 ? Math.max(...projetos.map(p => p.id)) + 1 : 1,

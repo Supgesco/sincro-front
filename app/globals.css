@@ -245,3 +245,10 @@
 @utility animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+@layer base {
+  option {
+    background-color: var(--sincro-bg-input);
+    color: var(--sincro-text-primary);
+  }
+}

@@ -22,7 +22,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-3">
           <Image
-            src="/logo.png"
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
             alt="Sincro"
             width={160}
             height={48}

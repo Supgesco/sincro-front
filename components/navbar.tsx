@@ -64,7 +64,7 @@ export function Navbar() {
       <div className="flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-8">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Sincro" width={120} height={32} className="h-8 w-auto" priority />
+            <Image src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`} alt="Sincro" width={120} height={32} className="h-8 w-auto" priority />
           </Link>
           
           <div className="flex items-center gap-4">

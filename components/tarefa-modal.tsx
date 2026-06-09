@@ -44,6 +44,7 @@ interface Tarefa {
   membros: string[]
   comentarios: { autor: string; texto: string }[]
   aceita: boolean
+  mostrarNoCalendario?: boolean
 }
 
 interface TarefaModalProps {
@@ -94,6 +95,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
   const [editDataEntrega, setEditDataEntrega] = useState(tarefa.dataEntrega)
   const [editComplexidade, setEditComplexidade] = useState(tarefa.complexidade)
   const [editUrgente, setEditUrgente] = useState(tarefa.urgente)
+  const [editMostrarNoCalendario, setEditMostrarNoCalendario] = useState(tarefa.mostrarNoCalendario || false)
   const [editMembros, setEditMembros] = useState<string[]>(tarefa.membros)
   const [novoMembro, setNovoMembro] = useState("")
   const [novoChecklistItem, setNovoChecklistItem] = useState("")
@@ -107,6 +109,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
     setEditDataEntrega(dateToISO(tarefa.dataEntrega))
     setEditComplexidade(tarefa.complexidade)
     setEditUrgente(tarefa.urgente)
+    setEditMostrarNoCalendario(tarefa.mostrarNoCalendario || false)
     setEditMembros(tarefa.membros)
     setChecklistItems(tarefa.checklist)
     prevChecklistRef.current = tarefa.checklist
@@ -141,6 +144,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
       dataEntrega: isoToDate(editDataEntrega),
       complexidade: editComplexidade,
       urgente: editUrgente,
+      mostrarNoCalendario: editMostrarNoCalendario,
       membros: editMembros,
       checklist: checklistItems,
     }
@@ -173,6 +177,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
     setEditDataEntrega(dateToISO(tarefa.dataEntrega))
     setEditComplexidade(tarefa.complexidade)
     setEditUrgente(tarefa.urgente)
+    setEditMostrarNoCalendario(tarefa.mostrarNoCalendario || false)
     setEditMembros(tarefa.membros)
     setChecklistItems(tarefa.checklist)
     setIsEditing(false)
@@ -259,6 +264,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                     setEditDataEntrega(tarefa.dataEntrega)
                     setEditComplexidade(tarefa.complexidade)
                     setEditUrgente(tarefa.urgente)
+                    setEditMostrarNoCalendario(tarefa.mostrarNoCalendario || false)
                     setEditMembros(tarefa.membros)
                     setChecklistItems(tarefa.checklist)
                     setIsEditing(true)
@@ -322,6 +328,15 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   />
                   Urgente
                 </label>
+                <label className="flex items-center gap-1.5 text-xs text-sincro-text-primary">
+                  <input
+                    type="checkbox"
+                    checked={editMostrarNoCalendario}
+                    onChange={(e) => setEditMostrarNoCalendario(e.target.checked)}
+                    className="rounded accent-status-cyan"
+                  />
+                  Calendário
+                </label>
               </>
             ) : (
               <>
@@ -350,6 +365,11 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 {tarefa.urgente && (
                   <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-orange text-white font-semibold">
                     Urgente
+                  </span>
+                )}
+                {tarefa.mostrarNoCalendario && (
+                  <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-cyan text-white font-semibold">
+                    No Calendário
                   </span>
                 )}
               </>
@@ -640,7 +660,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
 interface CriarTarefaModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (tarefa: Partial<Tarefa> & { projeto?: string; membros?: string[]; dataEntregaISO?: string }) => void
+  onCriar?: (tarefa: Partial<Tarefa> & { projeto?: string; membros?: string[]; dataEntregaISO?: string; mostrarNoCalendario?: boolean }) => void
 }
 
 export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalProps) {
@@ -652,6 +672,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
   const [dataEntrega, setDataEntrega] = useState("")
   const [complexidade, setComplexidade] = useState<string>("Média Complexidade")
   const [urgente, setUrgente] = useState(false)
+  const [mostrarNoCalendario, setMostrarNoCalendario] = useState(false)
   const [touched, setTouched] = useState(false)
   const [projetosDisponiveis, setProjetosDisponiveis] = useState(PROJETOS_DISPONIVEIS)
 
@@ -674,6 +695,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
       setDataEntrega("")
       setComplexidade("Média Complexidade")
       setUrgente(false)
+      setMostrarNoCalendario(false)
       setTouched(false)
     }
   }, [isOpen])
@@ -697,6 +719,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
       status,
       complexidade,
       urgente,
+      mostrarNoCalendario,
       dataEntregaISO: dataEntrega,
     })
     onClose()
@@ -876,6 +899,14 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
               onChange={setUrgente}
               label="Marcar como urgente"
               description="Tarefa com prazo apertado ou prioridade alta."
+            />
+
+            {/* Toggle: Mostrar no Calendário */}
+            <TarefaToggle
+              checked={mostrarNoCalendario}
+              onChange={setMostrarNoCalendario}
+              label="Mostrar no Calendário"
+              description="Exibir esta tarefa no calendário do Dashboard."
             />
           </div>
 

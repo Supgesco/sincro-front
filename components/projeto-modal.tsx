@@ -44,11 +44,13 @@ interface Projeto {
   criador: string
   status: string
   urgente: boolean
+  importante?: boolean
   complexidade: number
   descricao: string
   tarefasCompletas: number
   totalTarefas: number
   comentarios: { autor: string; texto: string }[]
+  mostrarNoCalendario?: boolean
 }
 
 interface ProjetoModalProps {
@@ -72,6 +74,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
   const [editData, setEditData] = useState(projeto.data)
   const [editStatus, setEditStatus] = useState(projeto.status)
   const [editUrgente, setEditUrgente] = useState(projeto.urgente)
+  const [editMostrarNoCalendario, setEditMostrarNoCalendario] = useState(projeto.mostrarNoCalendario || false)
   const [editComplexidade, setEditComplexidade] = useState(projeto.complexidade)
 
   useEffect(() => {
@@ -101,6 +104,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
       data: editData,
       status: editStatus,
       urgente: editUrgente,
+      mostrarNoCalendario: editMostrarNoCalendario,
       complexidade: editComplexidade,
     }
 
@@ -110,6 +114,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
     projeto.data = editData
     projeto.status = editStatus
     projeto.urgente = editUrgente
+    projeto.mostrarNoCalendario = editMostrarNoCalendario
     projeto.complexidade = editComplexidade
 
     if (onSave) {
@@ -124,6 +129,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
     setEditData(projeto.data)
     setEditStatus(projeto.status)
     setEditUrgente(projeto.urgente)
+    setEditMostrarNoCalendario(projeto.mostrarNoCalendario || false)
     setEditComplexidade(projeto.complexidade)
     setIsEditing(false)
   }
@@ -206,6 +212,15 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     />
                     Urgente
                   </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editMostrarNoCalendario}
+                      onChange={(e) => setEditMostrarNoCalendario(e.target.checked)}
+                      className="rounded"
+                    />
+                    Calendário
+                  </label>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span>Complexidade:</span>
                     <input
@@ -224,6 +239,12 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     <div className="flex items-center gap-1.5 text-status-red">
                       <span className="w-2.5 h-2.5 rounded-full bg-status-red" />
                       <span className="text-xs font-bold uppercase tracking-wider">Urgente</span>
+                    </div>
+                  )}
+                  {projeto.mostrarNoCalendario && (
+                    <div className="flex items-center gap-1.5 text-status-cyan">
+                      <span className="w-2.5 h-2.5 rounded-full bg-status-cyan" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Calendário</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2">
@@ -390,35 +411,40 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
 interface CriarProjetoModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (projeto: Partial<Projeto> & { equipe?: string; dataInicio?: string; prazo?: string; importante?: boolean }) => void
+  onCriar?: (projeto: Partial<Projeto> & { equipe: string; dataInicio?: string; prazo?: string; mostrarNoCalendario?: boolean }) => void
+  equipesDisponiveis?: string[]
 }
 
-export function CriarProjetoModal({ isOpen, onClose, onCriar }: CriarProjetoModalProps) {
+export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis }: CriarProjetoModalProps) {
+  const listaEquipes = equipesDisponiveis && equipesDisponiveis.length > 0 ? equipesDisponiveis : EQUIPES
+
   const [titulo, setTitulo] = useState("")
   const [descricao, setDescricao] = useState("")
-  const [equipe, setEquipe] = useState(EQUIPES[0])
+  const [equipe, setEquipe] = useState(listaEquipes[0])
   const [status, setStatus] = useState("Em Planejamento")
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 10))
   const [prazo, setPrazo] = useState("")
   const [complexidade, setComplexidade] = useState(5)
   const [urgente, setUrgente] = useState(false)
   const [importante, setImportante] = useState(false)
+  const [mostrarNoCalendario, setMostrarNoCalendario] = useState(false)
   const [touched, setTouched] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       setTitulo("")
       setDescricao("")
-      setEquipe(EQUIPES[0])
+      setEquipe(listaEquipes[0])
       setStatus("Em Planejamento")
       setDataInicio(new Date().toISOString().slice(0, 10))
       setPrazo("")
       setComplexidade(5)
       setUrgente(false)
       setImportante(false)
+      setMostrarNoCalendario(false)
       setTouched(false)
     }
-  }, [isOpen])
+  }, [isOpen, listaEquipes])
 
   const tituloInvalido = touched && !titulo.trim()
   const prazoInvalido = touched && prazo && dataInicio && new Date(prazo) < new Date(dataInicio)
@@ -437,6 +463,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar }: CriarProjetoModa
       complexidade,
       urgente,
       importante,
+      mostrarNoCalendario
     })
     onClose()
   }
@@ -524,7 +551,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar }: CriarProjetoModa
                   onChange={(e) => setEquipe(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
                 >
-                  {EQUIPES.map((eq) => (
+                  {listaEquipes.map((eq) => (
                     <option key={eq} value={eq}>{eq}</option>
                   ))}
                 </select>
@@ -618,6 +645,13 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar }: CriarProjetoModa
                 label="Importante"
                 description="Destaca o projeto na listagem."
                 color="yellow"
+              />
+              <ToggleSwitch
+                checked={mostrarNoCalendario}
+                onChange={setMostrarNoCalendario}
+                label="No Calendário"
+                description="Exibe o projeto na agenda do Dashboard."
+                color="cyan"
               />
             </div>
           </div>
@@ -726,12 +760,14 @@ function ToggleSwitch({
   onChange: (v: boolean) => void
   label: string
   description: string
-  color: "red" | "yellow"
+  color: "red" | "yellow" | "cyan"
 }) {
   const ringClass = checked
     ? color === "red"
       ? "bg-status-red"
-      : "bg-status-yellow"
+      : color === "cyan"
+        ? "bg-status-cyan"
+        : "bg-status-yellow"
     : "bg-sincro-text-muted/40"
   const dotClass = checked ? "translate-x-5" : "translate-x-0"
   return (
