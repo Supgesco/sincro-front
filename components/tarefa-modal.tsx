@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Modal } from "@/components/modal"
+import { Combobox } from "@/components/combobox"
 import { User, Calendar, Pencil, X, Check, Filter, Play, Send, RotateCcw, Plus, Users, Flag, Sparkles, AlertCircle, ListChecks, Trash2 } from "lucide-react"
 
 const statusBadgeTarefa: Record<string, string> = {
@@ -27,6 +28,18 @@ const PROJETOS_DISPONIVEIS = [
 const MEMBROS_DISPONIVEIS = [
   "Pessoa 1", "Pessoa 2", "Pessoa 3", "Pessoa 4", "Pessoa 5",
 ]
+
+function carregarUsuarios(): { label: string; sublabel?: string }[] {
+  if (typeof window === "undefined") return MEMBROS_DISPONIVEIS.map(m => ({ label: m }))
+  try {
+    const raw = localStorage.getItem("sincro-usuarios-data")
+    if (raw) {
+      const users = JSON.parse(raw) as { nome: string; email: string; equipe: string }[]
+      return users.filter(u => u.nome).map(u => ({ label: u.nome, sublabel: `${u.equipe} · ${u.email}` }))
+    }
+  } catch {}
+  return MEMBROS_DISPONIVEIS.map(m => ({ label: m }))
+}
 
 interface Tarefa {
   id: number
@@ -412,41 +425,23 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
 
           {/* Membros */}
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-bold text-sincro-modal-text">Membros:</span>
-              {isEditing && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={novoMembro}
-                    onChange={(e) => setNovoMembro(e.target.value)}
-                    placeholder="Adicionar..."
-                    maxLength={80}
-                    className="px-2 py-0.5 rounded-full text-xs bg-sincro-bg-input border border-sincro-border text-sincro-text-primary focus:outline-none"
-                  />
-                  <button
-                    onClick={handleAddMembro}
-                    className="w-6 h-6 rounded-full border border-sincro-border bg-sincro-modal-sidebar flex items-center justify-center hover:bg-sincro-bg-input text-sincro-modal-text font-bold transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {isEditing && (
+            <span className="font-bold text-sm text-sincro-modal-text">Membros:</span>
+            {isEditing ? (
+              <Combobox
+                options={carregarUsuarios()}
+                selected={editMembros}
+                onAdd={(v) => { if (!editMembros.includes(v)) setEditMembros([...editMembros, v]) }}
+                onRemove={(v) => setEditMembros(editMembros.filter(m => m !== v))}
+                placeholder="Buscar membro..."
+              />
+            ) : (
               <div className="flex flex-wrap gap-2">
                 {editMembros.map((m, idx) => (
-                  <div key={idx} className="flex items-center gap-1.5 bg-sincro-bg-input px-2.5 py-1 rounded-full text-xs text-sincro-text-primary border border-sincro-border">
-                    <span>{m}</span>
-                    <button
-                      onClick={() => handleRemoveMembro(idx)}
-                      className="text-status-red font-bold hover:opacity-80"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <span key={idx} className="flex items-center gap-1.5 bg-sincro-bg-input px-2.5 py-1 rounded-full text-xs text-sincro-text-primary border border-sincro-border">
+                    {m}
+                  </span>
                 ))}
+                {editMembros.length === 0 && <span className="text-xs text-sincro-text-muted">Nenhum membro</span>}
               </div>
             )}
           </div>
@@ -917,21 +912,13 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
               <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
                 <Users className="w-3 h-3" /> Membros Responsáveis
               </label>
-              <div className="flex flex-wrap gap-2">
-                {MEMBROS_DISPONIVEIS.map((m) => {
-                  const ativo = membros.includes(m)
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => toggleMembro(m)}
-                      className={`h-9 px-3 rounded-full border text-xs font-bold transition-all ${ativo ? "bg-status-cyan-bg text-status-cyan border-status-cyan" : "border-sincro-border bg-sincro-bg-input text-sincro-text-secondary hover:bg-black/5 dark:hover:bg-white/5"}`}
-                    >
-                      {m}
-                    </button>
-                  )
-                })}
-              </div>
+              <Combobox
+                options={carregarUsuarios()}
+                selected={membros}
+                onAdd={(v) => { if (!membros.includes(v)) setMembros([...membros, v]) }}
+                onRemove={(v) => setMembros(membros.filter(m => m !== v))}
+                placeholder="Buscar membro..."
+              />
             </div>
 
             {/* Toggle: Urgente */}

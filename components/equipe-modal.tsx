@@ -2,7 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "./modal"
+import { Combobox } from "./combobox"
 import { X, User, BarChart2, UserPlus, Plus, Trash2 } from "lucide-react"
+
+function carregarUsuarios(): { label: string; sublabel?: string }[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem("sincro-usuarios-data")
+    if (raw) {
+      const users = JSON.parse(raw) as { nome: string; email: string; equipe: string }[]
+      return users.filter(u => u.nome).map(u => ({ label: u.nome, sublabel: `${u.equipe} · ${u.email}` }))
+    }
+  } catch {}
+  return []
+}
 
 interface Membro {
   nome: string
@@ -148,34 +161,13 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
               {isEditing ? (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] text-sincro-text-muted font-bold uppercase tracking-wider">Gestores da Equipe:</span>
-                  <div className="flex flex-wrap gap-1.5 mb-1">
-                    {editGestores.map((g, i) => (
-                      <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
-                        {g}
-                        <button type="button" onClick={() => setEditGestores(editGestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      value={novoGestor}
-                      onChange={(e) => setNovoGestor(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && novoGestor.trim()) { e.preventDefault(); setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
-                      maxLength={80}
-                      placeholder="Adicionar gestor..."
-                      className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 w-full focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { if (novoGestor.trim()) { setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
-                      className="px-2 py-1 rounded bg-sincro-primary/30 text-sincro-primary text-xs font-bold hover:bg-sincro-primary/50 transition-all"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
+                  <Combobox
+                    options={carregarUsuarios()}
+                    selected={editGestores}
+                    onAdd={(v) => { if (!editGestores.includes(v)) setEditGestores([...editGestores, v]) }}
+                    onRemove={(v) => setEditGestores(editGestores.filter(g => g !== v))}
+                    placeholder="Buscar gestor..."
+                  />
                 </div>
               ) : (
                 <>
@@ -271,24 +263,15 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
               {isEditing && (
                 <div className="flex flex-col gap-2 p-3 rounded-xl border border-dashed border-sincro-border bg-sincro-modal-sidebar mt-2">
                   <span className="text-[10px] font-bold text-sincro-text-muted uppercase tracking-wider">Adicionar Membro</span>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Nome do Membro"
-                      value={novoMembroNome}
-                      onChange={(e) => setNovoMembroNome(e.target.value)}
-                      maxLength={80}
-                      className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1.5 w-1/2 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Status/Cargo"
-                      value={novoMembroStatus}
-                      onChange={(e) => setNovoMembroStatus(e.target.value)}
-                      maxLength={50}
-                      className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1.5 w-1/2 focus:outline-none"
-                    />
-                  </div>
+                  <Combobox
+                    options={carregarUsuarios().filter(u => !editMembros.find(m => m.nome === u.label))}
+                    selected={[]}
+                    onAdd={(v) => {
+                      setEditMembros(prev => [...prev, { nome: v, status: "Sem tarefas ativas", ativo: true }])
+                    }}
+                    onRemove={() => {}}
+                    placeholder="Buscar membro para adicionar..."
+                  />
                   <div className="flex justify-between items-center mt-1">
                     <label className="flex items-center gap-1.5 text-[10px] text-sincro-text-secondary cursor-pointer">
                       <input
@@ -299,12 +282,6 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                       />
                       Ativo
                     </label>
-                    <button
-                      onClick={handleAddMembro}
-                      className="h-7 px-3 bg-status-green text-white rounded-full text-[10px] font-bold hover:brightness-110 transition-all"
-                    >
-                      Adicionar
-                    </button>
                   </div>
                 </div>
               )}
@@ -518,35 +495,13 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
               <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
                 Gestores da Equipe
               </label>
-              <div className="flex flex-wrap gap-1.5 mb-1">
-                {gestores.map((g, i) => (
-                  <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
-                    {g}
-                    <button type="button" onClick={() => setGestores(gestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </span>
-                ))}
-                {gestores.length === 0 && <span className="text-[11px] text-sincro-text-muted">Nenhum gestor adicionado</span>}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={novoGestor}
-                  onChange={(e) => setNovoGestor(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } } }}
-                  placeholder="Nome do gestor..."
-                  maxLength={80}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => { if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
-                  className="px-4 py-2.5 rounded-xl bg-sincro-primary/30 text-sincro-primary font-bold hover:bg-sincro-primary/50 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              <Combobox
+                options={carregarUsuarios()}
+                selected={gestores}
+                onAdd={(v) => { if (!gestores.includes(v)) setGestores([...gestores, v]) }}
+                onRemove={(v) => setGestores(gestores.filter(g => g !== v))}
+                placeholder="Buscar gestor..."
+              />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -582,25 +537,17 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
               <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
                 Membros
               </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={novoMembroNome}
-                  onChange={(e) => setNovoMembroNome(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMembro() } }}
-                  placeholder="Nome do membro"
-                  maxLength={80}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddMembro}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-status-green text-white text-sm font-bold hover:brightness-110 active:scale-95 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  Adicionar
-                </button>
-              </div>
+              <Combobox
+                options={carregarUsuarios()}
+                selected={membros.map(m => m.nome)}
+                onAdd={(v) => {
+                  if (!membros.find(m => m.nome === v)) {
+                    setMembros(prev => [...prev, { nome: v, status: "Sem tarefas ativas", ativo: true }])
+                  }
+                }}
+                onRemove={(v) => setMembros(prev => prev.filter(m => m.nome !== v))}
+                placeholder="Buscar membro..."
+              />
               {membros.length > 0 && (
                 <div className="flex flex-col gap-1.5 mt-1">
                   {membros.map((m, idx) => (

@@ -2,7 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "./modal"
+import { Combobox } from "./combobox"
 import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check, Trash2, Plus } from "lucide-react"
+
+function carregarUsuarios(): { label: string; sublabel?: string }[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem("sincro-usuarios-data")
+    if (raw) {
+      const users = JSON.parse(raw) as { nome: string; email: string; equipe: string }[]
+      return users.filter(u => u.nome).map(u => ({ label: u.nome, sublabel: `${u.equipe} · ${u.email}` }))
+    }
+  } catch {}
+  return []
+}
 
 const statusCorProjeto: Record<string, string> = {
   "Em Andamento": "text-status-cyan",
@@ -201,34 +214,13 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                   </select>
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] text-sincro-text-muted font-bold uppercase tracking-wider">Gestores:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {editGestores.map((g, i) => (
-                        <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
-                          {g}
-                          <button type="button" onClick={() => setEditGestores(editGestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-1">
-                      <input
-                        type="text"
-                        value={novoGestor}
-                        onChange={(e) => setNovoGestor(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter" && novoGestor.trim()) { e.preventDefault(); setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
-                        maxLength={80}
-                        placeholder="Gestor do projeto..."
-                        className="flex-1 text-[10px] text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => { if (novoGestor.trim()) { setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
-                        className="px-2 py-0.5 rounded bg-sincro-primary/30 text-sincro-primary text-[10px] font-bold hover:bg-sincro-primary/50 transition-all"
-                      >
-                        <Plus className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
+                    <Combobox
+                      options={carregarUsuarios()}
+                      selected={editGestores}
+                      onAdd={(v) => { if (!editGestores.includes(v)) setEditGestores([...editGestores, v]) }}
+                      onRemove={(v) => setEditGestores(editGestores.filter(g => g !== v))}
+                      placeholder="Buscar gestor..."
+                    />
                   </div>
                 </div>
               ) : (
@@ -689,35 +681,13 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
               <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
                 Gestores do Projeto
               </label>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {gestores.map((g, i) => (
-                  <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
-                    {g}
-                    <button type="button" onClick={() => setGestores(gestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
-                      <X className="w-2.5 h-2.5" />
-                    </button>
-                  </span>
-                ))}
-                {gestores.length === 0 && <span className="text-[11px] text-sincro-text-muted">Nenhum gestor adicionado</span>}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={novoGestor}
-                  onChange={(e) => setNovoGestor(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } } }}
-                  placeholder="Nome do gestor do projeto..."
-                  maxLength={80}
-                  className="flex-1 h-10 px-4 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => { if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
-                  className="h-10 px-4 rounded-xl bg-sincro-primary/30 text-sincro-primary font-bold hover:bg-sincro-primary/50 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              <Combobox
+                options={carregarUsuarios()}
+                selected={gestores}
+                onAdd={(v) => { if (!gestores.includes(v)) setGestores([...gestores, v]) }}
+                onRemove={(v) => setGestores(gestores.filter(g => g !== v))}
+                placeholder="Buscar gestor..."
+              />
             </div>
 
             {/* Datas */}
