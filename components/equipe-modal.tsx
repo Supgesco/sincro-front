@@ -296,16 +296,6 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                 >
                   Cancelar
                 </button>
-              </div>
-            ) : (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 h-9 px-4 rounded-full border border-sincro-border text-sincro-modal-text text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-status-cyan shrink-0" />
-                  Editar Equipe
-                </button>
                 {onDelete && (
                   <button
                     onClick={() => { onDelete(equipe.id); onClose() }}
@@ -316,6 +306,14 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                   </button>
                 )}
               </div>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-2 h-9 px-4 rounded-full border border-sincro-border text-sincro-modal-text text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-status-cyan shrink-0" />
+                Editar Equipe
+              </button>
             )}
           </div>
         </div>
