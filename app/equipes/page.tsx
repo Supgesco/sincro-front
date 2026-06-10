@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/navbar"
 import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
-import { Plus, User, Building2, ChevronDown, X } from "lucide-react"
+import { Plus, User, Building2, ChevronDown, X, Check, Search } from "lucide-react"
 
 const EQUIPES_STORAGE_KEY = "sincro-equipes-data"
 const SETORES_STORAGE_KEY = "sincro-setores-data"
@@ -175,8 +175,9 @@ export default function EquipesPage() {
   const [selectedEquipe, setSelectedEquipe] = useState<typeof equipesData[0] | null>(null)
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
   const [filtroSetor, setFiltroSetor] = useState<string[]>([])
-  const [filtroSetorAberto, setFiltroSetorAberto] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [setores, setSetores] = useState<{ id: number; nome: string }[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
 
   const hasLoadedFromStorage = useRef(false)
 
@@ -195,8 +196,9 @@ export default function EquipesPage() {
   }, [equipes])
 
   const equipesFiltradas = equipes.filter(e => {
-    if (filtroSetor.length === 0) return true
-    return filtroSetor.includes(e.setor || "SEIOP")
+    const matchSetor = filtroSetor.length === 0 || filtroSetor.includes(e.setor || "SEIOP")
+    const matchSearch = !searchTerm || e.nome.toLowerCase().includes(searchTerm.toLowerCase()) || e.gestor.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchSetor && matchSearch
   })
 
   const toggleSetor = (nome: string) => {
@@ -228,64 +230,35 @@ export default function EquipesPage() {
         </div>
 
         {/* FILTRO POR SETOR */}
-        <div className="flex items-center gap-3 mb-4 shrink-0">
-          <div className="flex items-center gap-2 text-sm text-sincro-text-secondary">
-            <Building2 className="w-4 h-4" />
-            <span className="font-bold">Setor:</span>
+        <div className="flex items-center gap-3 p-4 border border-sincro-border rounded-2xl bg-sincro-modal-sidebar mb-4 shrink-0">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
+            <Search className="w-4 h-4 opacity-50" />
+            <input
+              type="text"
+              placeholder="Pesquisar equipe..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-transparent outline-none text-sm w-full text-sincro-text-primary"
+            />
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setFiltroSetorAberto(!filtroSetorAberto)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border text-sm font-bold text-sincro-text-primary hover:bg-white/5 transition-all min-w-[200px]"
-            >
-              <span className="flex-1 text-left truncate">
-                {filtroSetor.length === 0
-                  ? "Todos os setores"
-                  : filtroSetor.length === 1
-                    ? filtroSetor[0]
-                    : `${filtroSetor.length} setores selecionados`
-                }
-              </span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${filtroSetorAberto ? "rotate-180" : ""}`} />
-            </button>
-            {filtroSetorAberto && (
-              <div className="absolute top-full left-0 mt-2 w-full min-w-[250px] bg-sincro-modal-bg border border-sincro-border rounded-xl shadow-lg z-50 py-2 max-h-[300px] overflow-y-auto">
-                <button
-                  onClick={() => setFiltroSetor([])}
-                  className={`w-full px-4 py-2 text-left text-sm font-bold hover:bg-white/5 transition-colors ${
-                    filtroSetor.length === 0 ? "text-sincro-primary" : "text-sincro-text-primary"
-                  }`}
-                >
-                  Todos
-                </button>
-                {setores.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => toggleSetor(s.nome)}
-                    className={`w-full px-4 py-2 text-left text-sm font-bold hover:bg-white/5 transition-colors flex items-center justify-between ${
-                      filtroSetor.includes(s.nome) ? "text-sincro-primary" : "text-sincro-text-primary"
-                    }`}
-                  >
-                    <span>{s.nome}</span>
-                    {filtroSetor.includes(s.nome) && (
-                      <span className="w-5 h-5 rounded-full bg-sincro-primary text-white flex items-center justify-center">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+
+          <FilterDropdown
+            id="setor"
+            label="Setor"
+            icon={Building2}
+            options={setores.map(s => s.nome)}
+            selected={filtroSetor}
+            onChange={setFiltroSetor}
+            openDropdown={openDropdown}
+            setOpenDropdown={setOpenDropdown}
+          />
+
           {filtroSetor.length > 0 && (
             <button
               onClick={() => setFiltroSetor([])}
-              className="p-1.5 rounded-full hover:bg-white/10 text-sincro-text-secondary transition-colors"
-              title="Limpar filtro"
+              className="text-xs text-white/60 hover:text-status-red transition-colors px-2"
             >
-              <X className="w-4 h-4" />
+              Limpar tudo
             </button>
           )}
         </div>
@@ -337,6 +310,95 @@ export default function EquipesPage() {
           setEquipes(prev => [...prev, novo])
         }}
       />
+    </div>
+  )
+}
+
+function FilterDropdown({
+  id,
+  label,
+  icon: Icon,
+  options,
+  selected,
+  onChange,
+  openDropdown,
+  setOpenDropdown
+}: {
+  id: string
+  label: string
+  icon?: React.ComponentType<{ className?: string }>
+  options: string[]
+  selected: string[]
+  onChange: (next: string[]) => void
+  openDropdown: string | null
+  setOpenDropdown: (id: string | null) => void
+}) {
+  const isOpen = openDropdown === id
+  const hasFilter = selected.length > 0
+
+  const toggleOption = (opt: string) => {
+    if (selected.includes(opt)) {
+      onChange(selected.filter(s => s !== opt))
+    } else {
+      onChange([...selected, opt])
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpenDropdown(isOpen ? null : id)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition-colors cursor-pointer ${hasFilter
+          ? "bg-sincro-text-primary/20 border-sincro-text-primary text-sincro-text-primary font-bold"
+          : "border-white/40 hover:bg-white/10 text-sincro-text-primary"
+          }`}
+      >
+        {Icon && <Icon className="w-4 h-4 opacity-70" />}
+        {label}
+        {hasFilter && (
+          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-sincro-text-primary text-sincro-bg text-[10px] font-extrabold">
+            {selected.length}
+          </span>
+        )}
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setOpenDropdown(null)}
+          />
+          <div className="absolute left-0 top-full mt-2 z-20 min-w-[220px] p-2 rounded-xl border border-sincro-border bg-sincro-modal-bg shadow-xl flex flex-col gap-1">
+            {options.map(opt => {
+              const isSelected = selected.includes(opt)
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => toggleOption(opt)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left hover:bg-white/10 transition-colors cursor-pointer text-sincro-text-primary"
+                >
+                  <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? "bg-sincro-text-primary border-sincro-text-primary" : "border-white/40"}`}>
+                    {isSelected && <Check className="w-3 h-3 text-sincro-bg" />}
+                  </span>
+                  <span className="flex-1">{opt}</span>
+                </button>
+              )
+            })}
+            {hasFilter && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="mt-1 px-3 py-1.5 rounded-lg text-xs text-status-red hover:bg-status-red-bg transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

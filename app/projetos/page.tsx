@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
-import { Search, Plus, Users, ListChecks, Folder, Filter, ChevronDown, Check, X } from "lucide-react"
+import { Search, Plus, Users, ListChecks, Folder, Filter, ChevronDown, Check, X, Building2 } from "lucide-react"
 import { ProjetoModal, CriarProjetoModal } from "@/components/projeto-modal"
 
 const PROJETOS_STORAGE_KEY = "sincro-projetos-data"
@@ -229,9 +229,11 @@ export default function ProjetosPage() {
   const [equipeFilter, setEquipeFilter] = useState<string[]>([])
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [complexidadeFilter, setComplexidadeFilter] = useState<string[]>([])
+  const [setorFilter, setSetorFilter] = useState<string[]>([])
   const [apenasUrgentes, setApenasUrgentes] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [equipesDisponiveis, setEquipesDisponiveis] = useState<string[]>([])
+  const [equipesMap, setEquipesMap] = useState<Record<string, string>>({})
 
   const hasLoadedFromStorage = useRef(false)
 
@@ -246,6 +248,16 @@ export default function ProjetosPage() {
     // Carrega equipes criadas pelo usuário
     const nomeEquipes = getEquipesStorage()
     if (nomeEquipes.length > 0) setEquipesDisponiveis(nomeEquipes)
+    // Carrega mapa de equipes -> setores
+    try {
+      const raw = localStorage.getItem("sincro-equipes-data")
+      if (raw) {
+        const equipes = JSON.parse(raw) as { nome: string; setor?: string }[]
+        const map: Record<string, string> = {}
+        equipes.forEach(e => { map[e.nome] = e.setor || "SEIOP" })
+        setEquipesMap(map)
+      }
+    } catch {}
   }, [])
 
   useEffect(() => {
@@ -272,7 +284,9 @@ export default function ProjetosPage() {
     const matchStatus = statusFilter.length === 0 || statusFilter.includes(p.status)
     const matchComplexidade = complexidadeFilter.length === 0 || complexidadeFilter.includes(complexidadeDoProjeto(p.complexidade))
     const matchUrgente = !apenasUrgentes || p.urgente
-    return matchSearch && matchEquipe && matchStatus && matchComplexidade && matchUrgente
+    const projetoSetor = equipesMap[p.equipe || ""] || "SEIOP"
+    const matchSetor = setorFilter.length === 0 || setorFilter.includes(projetoSetor)
+    return matchSearch && matchEquipe && matchStatus && matchComplexidade && matchUrgente && matchSetor
   })
 
   return (
@@ -340,6 +354,16 @@ export default function ProjetosPage() {
                 openDropdown={openDropdown}
                 setOpenDropdown={setOpenDropdown}
               />
+              <FilterDropdown
+                id="setor"
+                label="Setor"
+                icon={Building2}
+                options={Array.from(new Set(Object.values(equipesMap)))}
+                selected={setorFilter}
+                onChange={setSetorFilter}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+              />
 
               <button
                 type="button"
@@ -354,12 +378,13 @@ export default function ProjetosPage() {
                 Urgentes
               </button>
 
-              {(equipeFilter.length > 0 || statusFilter.length > 0 || complexidadeFilter.length > 0 || apenasUrgentes || searchTerm) && (
+              {(equipeFilter.length > 0 || statusFilter.length > 0 || complexidadeFilter.length > 0 || setorFilter.length > 0 || apenasUrgentes || searchTerm) && (
                 <button
                   onClick={() => {
                     setEquipeFilter([])
                     setStatusFilter([])
                     setComplexidadeFilter([])
+                    setSetorFilter([])
                     setApenasUrgentes(false)
                     setSearchTerm("")
                   }}

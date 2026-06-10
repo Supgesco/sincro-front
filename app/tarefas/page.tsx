@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { CircularProgress } from "@/components/circular-progress"
 import { Modal } from "@/components/modal"
 import { TarefaModal, CriarTarefaModal } from "@/components/tarefa-modal"
-import { Plus, Search, Check, Play, X, User, Calendar, Folder, Eye, Star, Users, Filter, ListChecks, ChevronDown, ListTodo, RotateCcw } from "lucide-react"
+import { Plus, Search, Check, Play, X, User, Calendar, Folder, Eye, Star, Users, Filter, ListChecks, ChevronDown, ListTodo, RotateCcw, Building2 } from "lucide-react"
 import { useToast } from "@/components/toast"
 
 const STORAGE_KEY = "sincro-tarefas-finalizadas"
@@ -213,8 +213,10 @@ function TarefasContent() {
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [complexidadeFilter, setComplexidadeFilter] = useState<string[]>([])
   const [projetoFilter, setProjetoFilter] = useState<string[]>([])
+  const [setorFilter, setSetorFilter] = useState<string[]>([])
   const [apenasUrgentes, setApenasUrgentes] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [equipesMap, setEquipesMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const urlProjeto = searchParams.get("projeto")
@@ -229,6 +231,18 @@ function TarefasContent() {
     }
     window.addEventListener("storage", handleStorage)
     return () => window.removeEventListener("storage", handleStorage)
+  }, [])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sincro-equipes-data")
+      if (raw) {
+        const equipes = JSON.parse(raw) as { nome: string; setor?: string }[]
+        const map: Record<string, string> = {}
+        equipes.forEach(e => { map[e.nome] = e.setor || "SEIOP" })
+        setEquipesMap(map)
+      }
+    } catch {}
   }, [])
 
   const hasLoadedFromStorage = useRef(false)
@@ -349,7 +363,9 @@ function TarefasContent() {
     const matchStatus = statusFilter.length === 0 || statusFilter.includes(statusEfetivo) || statusFilter.includes(t.status)
     const matchComplexidade = complexidadeFilter.length === 0 || complexidadeFilter.includes(t.complexidade)
     const matchUrgente = !apenasUrgentes || t.urgente
-    return matchSearch && matchProject && matchEquipe && matchStatus && matchComplexidade && matchUrgente
+    const tarefaSetor = equipesMap[t.equipe || ""] || "SEIOP"
+    const matchSetor = setorFilter.length === 0 || setorFilter.includes(tarefaSetor)
+    return matchSearch && matchProject && matchEquipe && matchStatus && matchComplexidade && matchUrgente && matchSetor
   })
 
   return (
@@ -439,6 +455,16 @@ function TarefasContent() {
                 openDropdown={openDropdown}
                 setOpenDropdown={setOpenDropdown}
               />
+              <FilterDropdown
+                id="setor"
+                label="Setor"
+                icon={Building2}
+                options={Array.from(new Set(Object.values(equipesMap)))}
+                selected={setorFilter}
+                onChange={setSetorFilter}
+                openDropdown={openDropdown}
+                setOpenDropdown={setOpenDropdown}
+              />
 
               <button
                 type="button"
@@ -452,13 +478,14 @@ function TarefasContent() {
                 Urgentes
               </button>
 
-              {(equipeFilter.length > 0 || statusFilter.length > 0 || complexidadeFilter.length > 0 || projetoFilter.length > 0 || apenasUrgentes || searchTerm) && (
+              {(equipeFilter.length > 0 || statusFilter.length > 0 || complexidadeFilter.length > 0 || projetoFilter.length > 0 || setorFilter.length > 0 || apenasUrgentes || searchTerm) && (
                 <button
                   onClick={() => {
                     setEquipeFilter([])
                     setStatusFilter([])
                     setComplexidadeFilter([])
                     setProjetoFilter([])
+                    setSetorFilter([])
                     setApenasUrgentes(false)
                     setSearchTerm("")
                     if (searchParams.get("projeto")) router.push("/tarefas")
