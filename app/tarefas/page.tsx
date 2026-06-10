@@ -76,7 +76,7 @@ const mesesExtenso = [
 ]
 
 const formatarDataExtenso = (data: string): string => {
-  if (!data) return ""
+  if (!data) return "Sem prazo determinado"
   if (data.includes("/")) {
     const [dia, mes, ano] = data.split("/")
     const mesIdx = parseInt(mes, 10) - 1
@@ -95,6 +95,7 @@ const formatarDataExtenso = (data: string): string => {
 }
 
 const parseDataExtenso = (data: string): Date | null => {
+  if (!data || data === "Sem prazo determinado") return null
   const match = data.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d{4})/)
   if (!match) return null
   const dia = parseInt(match[1], 10)
@@ -251,6 +252,7 @@ function TarefasContent() {
         })
         const atrasadas = updated.filter(t => {
           if (t.status === "Finalizado") return false
+          if (!t.dataEntrega || t.dataEntrega === "Sem prazo determinado") return false
           const entrega = parseDataExtenso(t.dataEntrega)
           if (!entrega) return false
           const hoje = new Date()
@@ -318,6 +320,7 @@ function TarefasContent() {
 
   const getStatusEfetivo = (t: Tarefa): string => {
     if (t.status === "Finalizado") return "Finalizado"
+    if (!t.dataEntrega || t.dataEntrega === "Sem prazo determinado") return t.status
     const entrega = parseDataExtenso(t.dataEntrega)
     if (!entrega) return t.status
     const hoje = new Date()
@@ -685,7 +688,7 @@ function TarefasContent() {
           const dataCriacao = `${hoje.getDate()} de ${mesesExtenso[hoje.getMonth()]} de ${hoje.getFullYear()}`
           const dataEntrega = novaTarefa.dataEntregaISO
             ? formatarDataExtenso(novaTarefa.dataEntregaISO)
-            : dataCriacao
+            : "Sem prazo determinado"
           const novo: Tarefa = {
             id: tarefas.length > 0 ? Math.max(...tarefas.map(t => t.id)) + 1 : 1,
             nome: novaTarefa.nome || "Nova Tarefa",

@@ -65,6 +65,7 @@ const mesesExtenso = [
 ]
 
 const parseDataExtenso = (data: string): Date | null => {
+  if (!data || data === "Sem prazo determinado") return null
   const match = data.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d{4})/)
   if (!match) return null
   const dia = parseInt(match[1], 10)
@@ -75,7 +76,7 @@ const parseDataExtenso = (data: string): Date | null => {
 }
 
 const formatarDataExtenso = (data: string): string => {
-  if (!data) return ""
+  if (!data) return "Sem prazo determinado"
   if (data.includes("-") && data.length === 10) {
     const [ano, mes, dia] = data.split("-")
     const mesIdx = parseInt(mes, 10) - 1
@@ -83,10 +84,12 @@ const formatarDataExtenso = (data: string): string => {
       return `${parseInt(dia, 10)} de ${mesesExtenso[mesIdx]} de ${ano}`
     }
   }
+  if (data === "Sem prazo determinado") return data
   return data
 }
 
 const dateToISO = (extenso: string): string => {
+  if (!extenso || extenso === "Sem prazo determinado") return ""
   const d = parseDataExtenso(extenso)
   if (!d) return ""
   const dd = d.getDate().toString().padStart(2, "0")
@@ -98,6 +101,7 @@ const dateToISO = (extenso: string): string => {
 export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onFinalizar, onReabrir, onSave, onExcluir }: TarefaModalProps) {
   const getStatusEfetivo = (t: { status: string; dataEntrega: string }): string => {
     if (t.status === "Finalizado") return "Finalizado"
+    if (!t.dataEntrega || t.dataEntrega === "Sem prazo determinado") return t.status
     const entrega = parseDataExtenso(t.dataEntrega)
     if (!entrega) return t.status
     const hoje = new Date()
@@ -956,7 +960,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
 
               <div className="flex flex-col gap-1.5 pt-2 border-t border-sincro-border">
                 <PreviewRowTarefa icon={Flag} label="Projeto" value={projeto} />
-                <PreviewRowTarefa icon={Calendar} label="Entrega" value={formatarDataBR(dataEntrega) || "—"} />
+                <PreviewRowTarefa icon={Calendar} label="Entrega" value={formatarDataBR(dataEntrega) || "Sem prazo determinado"} />
                 <PreviewRowTarefa
                   icon={Sparkles}
                   label="Complexidade"
