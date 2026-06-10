@@ -40,6 +40,7 @@ interface Projeto {
   titulo: string
   data: string
   equipe?: string
+  requerente?: string
   progresso?: number
   criador: string
   status: string
@@ -66,12 +67,14 @@ interface ProjetoModalProps {
 export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarFinalizado, onSave, onExcluir }: ProjetoModalProps) {
   const [comentario, setComentario] = useState("")
   const [comentarios, setComentarios] = useState(projeto.comentarios)
+  const [listaSetores, setListaSetores] = useState<string[]>([])
 
   // Edit fields state
   const [isEditing, setIsEditing] = useState(false)
   const [editTitulo, setEditTitulo] = useState(projeto.titulo)
   const [editDescricao, setEditDescricao] = useState(projeto.descricao || "")
   const [editData, setEditData] = useState(projeto.data)
+  const [editRequerente, setEditRequerente] = useState(projeto.requerente || "")
   const [editStatus, setEditStatus] = useState(projeto.status)
   const [editUrgente, setEditUrgente] = useState(projeto.urgente)
   const [editMostrarNoCalendario, setEditMostrarNoCalendario] = useState(projeto.mostrarNoCalendario || false)
@@ -80,6 +83,16 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
   useEffect(() => {
     setComentarios(projeto.comentarios)
   }, [projeto])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sincro-setores-data")
+      if (raw) {
+        const parsed: { nome: string }[] = JSON.parse(raw)
+        setListaSetores(parsed.map(s => s.nome))
+      }
+    } catch {}
+  }, [])
 
   const progresso = projeto.totalTarefas > 0 ? (projeto.tarefasCompletas / projeto.totalTarefas) * 100 : 0
 
@@ -102,6 +115,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
       titulo: editTitulo,
       descricao: editDescricao,
       data: editData,
+      requerente: editRequerente,
       status: editStatus,
       urgente: editUrgente,
       mostrarNoCalendario: editMostrarNoCalendario,
@@ -112,6 +126,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
     projeto.titulo = editTitulo
     projeto.descricao = editDescricao
     projeto.data = editData
+    projeto.requerente = editRequerente
     projeto.status = editStatus
     projeto.urgente = editUrgente
     projeto.mostrarNoCalendario = editMostrarNoCalendario
@@ -169,6 +184,16 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     className="text-xs text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 w-40 focus:outline-none"
                     placeholder="Data / Período"
                   />
+                  <select
+                    value={editRequerente}
+                    onChange={(e) => setEditRequerente(e.target.value)}
+                    className="text-xs text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 focus:outline-none"
+                  >
+                    <option value="">Requerente</option>
+                    {listaSetores.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </div>
               ) : (
                 <>
@@ -176,6 +201,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                   <div className="flex items-center gap-4 mt-2 text-sm text-sincro-modal-text/70">
                     <span>{projeto.data}</span>
                     <span>Criado por {projeto.criador}</span>
+                    {projeto.requerente && <span>Requerente: {projeto.requerente}</span>}
                   </div>
                 </>
               )}
@@ -415,7 +441,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
 interface CriarProjetoModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (projeto: Partial<Projeto> & { equipe: string; dataInicio?: string; prazo?: string; mostrarNoCalendario?: boolean }) => void
+  onCriar?: (projeto: Partial<Projeto> & { equipe: string; requerente?: string; dataInicio?: string; prazo?: string; mostrarNoCalendario?: boolean }) => void
   equipesDisponiveis?: string[]
 }
 
@@ -425,6 +451,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
   const [titulo, setTitulo] = useState("")
   const [descricao, setDescricao] = useState("")
   const [equipe, setEquipe] = useState(listaEquipes[0])
+  const [requerente, setRequerente] = useState("")
   const [status, setStatus] = useState("Em Planejamento")
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 10))
   const [prazo, setPrazo] = useState("")
@@ -433,12 +460,24 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
   const [importante, setImportante] = useState(false)
   const [mostrarNoCalendario, setMostrarNoCalendario] = useState(false)
   const [touched, setTouched] = useState(false)
+  const [listaSetores, setListaSetores] = useState<string[]>([])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("sincro-setores-data")
+      if (raw) {
+        const parsed: { nome: string }[] = JSON.parse(raw)
+        setListaSetores(parsed.map(s => s.nome))
+      }
+    } catch {}
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
       setTitulo("")
       setDescricao("")
       setEquipe(listaEquipes[0])
+      setRequerente("")
       setStatus("Em Planejamento")
       setDataInicio(new Date().toISOString().slice(0, 10))
       setPrazo("")
@@ -461,6 +500,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
       titulo: titulo.trim(),
       descricao,
       equipe,
+      requerente,
       status,
       dataInicio,
       prazo,
@@ -546,8 +586,8 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
               />
             </div>
 
-            {/* Equipe + Status */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Equipe + Status + Requerente */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
                   <Users className="w-3 h-3" /> Equipe Responsável
@@ -559,6 +599,21 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
                 >
                   {listaEquipes.map((eq) => (
                     <option key={eq} value={eq}>{eq}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5">
+                  Requerente (Setor)
+                </label>
+                <select
+                  value={requerente}
+                  onChange={(e) => setRequerente(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                >
+                  <option value="">Selecione...</option>
+                  {listaSetores.map((s) => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
               </div>

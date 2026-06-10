@@ -63,6 +63,7 @@ const projetosData = [
     titulo: "Projeto Alpha",
     data: "20/05/2026",
     equipe: "Equipe Alpha",
+    requerente: "Secretaria de Saúde",
     progresso: 50,
     status: "Em Andamento",
     urgente: true,
@@ -81,6 +82,7 @@ const projetosData = [
     titulo: "Projeto Beta",
     data: "15/06/2026",
     equipe: "Equipe Dev",
+    requerente: "Secretaria de Finanças",
     progresso: 75,
     status: "Em Atraso",
     urgente: true,
@@ -96,6 +98,7 @@ const projetosData = [
     titulo: "Projeto Gama",
     data: "01/04/2026",
     equipe: "Equipe QA",
+    requerente: "Secretaria de Educação",
     progresso: 100,
     status: "Finalizado",
     urgente: false,
@@ -113,6 +116,7 @@ const projetosData = [
     titulo: "Projeto Delta",
     data: "10/07/2026",
     equipe: "Equipe Marketing",
+    requerente: "SEIOP",
     progresso: 0,
     status: "Não Iniciado",
     urgente: false,
@@ -128,6 +132,7 @@ const projetosData = [
     titulo: "Projeto Epsilon",
     data: "22/05/2026",
     equipe: "Equipe Design",
+    requerente: "Secretaria de Obras",
     progresso: 90,
     status: "Em Atraso",
     urgente: true,
@@ -143,6 +148,7 @@ const projetosData = [
     titulo: "Projeto Zeta",
     data: "30/08/2026",
     equipe: "Equipe Ops",
+    requerente: "Secretaria de Administração",
     progresso: 0,
     status: "Não Iniciado",
     urgente: false,
@@ -158,6 +164,7 @@ const projetosData = [
     titulo: "Projeto Eta",
     data: "12/05/2026",
     equipe: "Equipe Dados",
+    requerente: "Secretaria de Meio Ambiente",
     progresso: 25,
     status: "Em Atraso",
     urgente: true,
@@ -173,6 +180,7 @@ const projetosData = [
     titulo: "Projeto Theta",
     data: "20/03/2026",
     equipe: "Equipe Suporte",
+    requerente: "SEIOP",
     progresso: 100,
     status: "Finalizado",
     urgente: false,
@@ -188,6 +196,7 @@ const projetosData = [
     titulo: "Projeto Iota",
     data: "05/06/2026",
     equipe: "Equipe RH",
+    requerente: "Secretaria de Transporte",
     progresso: 40,
     status: "Em Atraso",
     urgente: true,
@@ -468,6 +477,7 @@ export default function ProjetosPage() {
             titulo: novoProjeto.titulo || "Novo Projeto",
             data: new Date().toLocaleDateString("pt-BR"),
             equipe: novoProjeto.equipe || "Equipe Principal",
+            requerente: novoProjeto.requerente || "",
             progresso: 0,
             status: novoProjeto.status || "Não Iniciado",
             urgente: novoProjeto.urgente || false,
@@ -594,6 +604,7 @@ function ProjectCard({
           <h3 className="font-bold text-base text-sincro-text-primary truncate">{projeto.titulo}</h3>
           <p className="text-[11px] text-sincro-text-secondary mt-1">{projeto.data}</p>
           <p className="text-[11px] text-sincro-text-secondary">Equipe: {projeto.equipe}</p>
+          {projeto.requerente && <p className="text-[11px] text-sincro-text-secondary">Requerente: {projeto.requerente}</p>}
         </div>
         <div className="text-right shrink-0 ml-3">
           <p className="text-[10px] uppercase tracking-wider text-sincro-text-secondary font-semibold">Complexidade</p>
