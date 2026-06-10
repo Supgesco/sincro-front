@@ -59,25 +59,47 @@ interface TarefaModalProps {
   onExcluir?: () => void
 }
 
-const dateToISO = (ddmmmyyyy: string): string => {
-  if (!ddmmmyyyy) return ""
-  const [dia, mes, ano] = ddmmmyyyy.split("/")
-  if (!dia || !mes || !ano) return ""
-  return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`
+const mesesExtenso = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+const parseDataExtenso = (data: string): Date | null => {
+  const match = data.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d{4})/)
+  if (!match) return null
+  const dia = parseInt(match[1], 10)
+  const mesIdx = mesesExtenso.indexOf(match[2])
+  const ano = parseInt(match[3], 10)
+  if (mesIdx === -1) return null
+  return new Date(ano, mesIdx, dia)
 }
 
-const isoToDate = (iso: string): string => {
-  if (!iso) return ""
-  const [ano, mes, dia] = iso.split("-")
-  if (!ano || !mes || !dia) return ""
-  return `${dia}/${mes}/${ano}`
+const formatarDataExtenso = (data: string): string => {
+  if (!data) return ""
+  if (data.includes("-") && data.length === 10) {
+    const [ano, mes, dia] = data.split("-")
+    const mesIdx = parseInt(mes, 10) - 1
+    if (mesIdx >= 0 && mesIdx < 12) {
+      return `${parseInt(dia, 10)} de ${mesesExtenso[mesIdx]} de ${ano}`
+    }
+  }
+  return data
+}
+
+const dateToISO = (extenso: string): string => {
+  const d = parseDataExtenso(extenso)
+  if (!d) return ""
+  const dd = d.getDate().toString().padStart(2, "0")
+  const mm = (d.getMonth() + 1).toString().padStart(2, "0")
+  const yyyy = d.getFullYear()
+  return `${yyyy}-${mm}-${dd}`
 }
 
 export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onFinalizar, onReabrir, onSave, onExcluir }: TarefaModalProps) {
   const getStatusEfetivo = (t: { status: string; dataEntrega: string }): string => {
     if (t.status === "Finalizado") return "Finalizado"
-    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
-    const entrega = new Date(ano, mes - 1, dia)
+    const entrega = parseDataExtenso(t.dataEntrega)
+    if (!entrega) return t.status
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
     if (entrega < hoje) return "Em Atraso"
@@ -141,7 +163,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
       nome: editNome,
       descricao: editDescricao,
       status: editStatus,
-      dataEntrega: isoToDate(editDataEntrega),
+      dataEntrega: formatarDataExtenso(editDataEntrega),
       complexidade: editComplexidade,
       urgente: editUrgente,
       mostrarNoCalendario: editMostrarNoCalendario,

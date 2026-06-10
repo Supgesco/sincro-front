@@ -70,6 +70,40 @@ const removeFavorita = (id: number) => {
 
 const TAREFAS_KEY = "sincro-tarefas-data"
 
+const mesesExtenso = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+const formatarDataExtenso = (data: string): string => {
+  if (!data) return ""
+  if (data.includes("/")) {
+    const [dia, mes, ano] = data.split("/")
+    const mesIdx = parseInt(mes, 10) - 1
+    if (mesIdx >= 0 && mesIdx < 12) {
+      return `${parseInt(dia, 10)} de ${mesesExtenso[mesIdx]} de ${ano}`
+    }
+  }
+  if (data.includes("-") && data.length === 10) {
+    const [ano, mes, dia] = data.split("-")
+    const mesIdx = parseInt(mes, 10) - 1
+    if (mesIdx >= 0 && mesIdx < 12) {
+      return `${parseInt(dia, 10)} de ${mesesExtenso[mesIdx]} de ${ano}`
+    }
+  }
+  return data
+}
+
+const parseDataExtenso = (data: string): Date | null => {
+  const match = data.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d{4})/)
+  if (!match) return null
+  const dia = parseInt(match[1], 10)
+  const mesIdx = mesesExtenso.indexOf(match[2])
+  const ano = parseInt(match[3], 10)
+  if (mesIdx === -1) return null
+  return new Date(ano, mesIdx, dia)
+}
+
 const getTarefasStorage = (): Tarefa[] | null => {
   if (typeof window === "undefined") return null
   try {
@@ -135,8 +169,8 @@ const tarefasData: Tarefa[] = [
     criador: "Seu Nome",
     projeto: "Projeto Alpha",
     equipe: "Equipe Dev",
-    dataCriacao: "25 de janeiro, 2025",
-    dataEntrega: "12/04/2026",
+    dataCriacao: "25 de janeiro de 2025",
+    dataEntrega: "12 de abril de 2026",
     status: "Não Iniciado",
     complexidade: "Média Complexidade",
     urgente: true,
@@ -154,12 +188,12 @@ const tarefasData: Tarefa[] = [
     ],
     aceita: false
   },
-  { id: 2, nome: "Nome da Tarefa 2", criador: "Seu Nome", projeto: "Projeto Alpha", equipe: "Equipe Dev", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Média Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 2", checklist: [], membros: [], comentarios: [], aceita: false },
-  { id: 3, nome: "Nome da Tarefa 3", criador: "Seu Nome", projeto: "Projeto Beta", equipe: "Equipe QA", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 3", checklist: [], membros: [], comentarios: [], aceita: true },
-  { id: 4, nome: "Nome da Tarefa 4", criador: "Seu Nome", projeto: "Projeto Gama", equipe: "Equipe Design", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Baixa Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 4", checklist: [], membros: [], comentarios: [], aceita: true },
-  { id: 5, nome: "Nome da Tarefa 5", criador: "Seu Nome", projeto: "Projeto Delta", equipe: "Equipe Marketing", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Em Andamento", complexidade: "Média Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 5", checklist: [], membros: [], comentarios: [], aceita: true },
-  { id: 6, nome: "Nome da Tarefa 6", criador: "Seu Nome", projeto: "Projeto Epsilon", equipe: "Equipe Ops", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 6", checklist: [], membros: [], comentarios: [], aceita: false },
-  { id: 7, nome: "Nome da Tarefa 7", criador: "Seu Nome", projeto: "Projeto Zeta", equipe: "Equipe Dados", dataCriacao: "25 de janeiro, 2025", dataEntrega: "12/04/2026", status: "Não Iniciado", complexidade: "Baixa Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 7", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 2, nome: "Nome da Tarefa 2", criador: "Seu Nome", projeto: "Projeto Alpha", equipe: "Equipe Dev", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Não Iniciado", complexidade: "Média Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 2", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 3, nome: "Nome da Tarefa 3", criador: "Seu Nome", projeto: "Projeto Beta", equipe: "Equipe QA", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Em Andamento", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 3", checklist: [], membros: [], comentarios: [], aceita: true },
+  { id: 4, nome: "Nome da Tarefa 4", criador: "Seu Nome", projeto: "Projeto Gama", equipe: "Equipe Design", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Em Andamento", complexidade: "Baixa Complexidade", urgente: true, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 4", checklist: [], membros: [], comentarios: [], aceita: true },
+  { id: 5, nome: "Nome da Tarefa 5", criador: "Seu Nome", projeto: "Projeto Delta", equipe: "Equipe Marketing", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Em Andamento", complexidade: "Média Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 5", checklist: [], membros: [], comentarios: [], aceita: true },
+  { id: 6, nome: "Nome da Tarefa 6", criador: "Seu Nome", projeto: "Projeto Epsilon", equipe: "Equipe Ops", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Não Iniciado", complexidade: "Alta Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 6", checklist: [], membros: [], comentarios: [], aceita: false },
+  { id: 7, nome: "Nome da Tarefa 7", criador: "Seu Nome", projeto: "Projeto Zeta", equipe: "Equipe Dados", dataCriacao: "25 de janeiro de 2025", dataEntrega: "12 de abril de 2026", status: "Não Iniciado", complexidade: "Baixa Complexidade", urgente: false, progresso: { atual: 0, total: 4 }, descricao: "Descrição da tarefa 7", checklist: [], membros: [], comentarios: [], aceita: false },
 ]
 
 function TarefasContent() {
@@ -217,8 +251,8 @@ function TarefasContent() {
         })
         const atrasadas = updated.filter(t => {
           if (t.status === "Finalizado") return false
-          const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
-          const entrega = new Date(ano, mes - 1, dia)
+          const entrega = parseDataExtenso(t.dataEntrega)
+          if (!entrega) return false
           const hoje = new Date()
           hoje.setHours(0, 0, 0, 0)
           return entrega < hoje
@@ -284,8 +318,8 @@ function TarefasContent() {
 
   const getStatusEfetivo = (t: Tarefa): string => {
     if (t.status === "Finalizado") return "Finalizado"
-    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
-    const entrega = new Date(ano, mes - 1, dia)
+    const entrega = parseDataExtenso(t.dataEntrega)
+    if (!entrega) return t.status
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
     if (entrega < hoje) return "Em Atraso"
@@ -647,14 +681,10 @@ function TarefasContent() {
         isOpen={isCriarModalOpen}
         onClose={() => setIsCriarModalOpen(false)}
         onCriar={(novaTarefa) => {
-          const meses = [
-            "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-            "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-          ]
           const hoje = new Date()
-          const dataCriacao = `${hoje.getDate()} de ${meses[hoje.getMonth()]}, ${hoje.getFullYear()}`
+          const dataCriacao = `${hoje.getDate()} de ${mesesExtenso[hoje.getMonth()]} de ${hoje.getFullYear()}`
           const dataEntrega = novaTarefa.dataEntregaISO
-            ? novaTarefa.dataEntregaISO.split("-").reverse().join("/")
+            ? formatarDataExtenso(novaTarefa.dataEntregaISO)
             : dataCriacao
           const novo: Tarefa = {
             id: tarefas.length > 0 ? Math.max(...tarefas.map(t => t.id)) + 1 : 1,
