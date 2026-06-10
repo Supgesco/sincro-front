@@ -505,6 +505,10 @@ function TarefasContent() {
               </button>
             </div>
 
+            <div className="text-sm text-sincro-text-secondary px-1">
+              {filteredTarefas.length} Tarefa{filteredTarefas.length !== 1 ? "s" : ""}
+            </div>
+
             <div className="flex flex-col gap-3 p-4 rounded-2xl bg-black/5 overflow-y-auto flex-1 min-h-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
               {filteredTarefas.length === 0 ? (
                 <div className="border border-sincro-border rounded-2xl p-8 text-center text-sincro-text-muted bg-sincro-modal-sidebar">

@@ -403,6 +403,10 @@ export default function ProjetosPage() {
               </button>
             </div>
 
+            <div className="text-sm text-sincro-text-secondary px-1">
+              {filteredProjetos.length} Projeto{filteredProjetos.length !== 1 ? "s" : ""}
+            </div>
+
             <div className="grid grid-cols-3 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
               {filteredProjetos.map((projeto) => (
                 <ProjectCard

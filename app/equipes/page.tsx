@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/navbar"
+import { CircularProgress } from "@/components/circular-progress"
 import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
 import { Plus, User, Building2, ChevronDown, X, Check, Search } from "lucide-react"
 
@@ -217,60 +218,87 @@ export default function EquipesPage() {
       <Navbar />
 
       <main className="p-6 flex-1 flex flex-col min-h-0">
-        <div className="flex-1 flex flex-col space-y-6 min-h-0">
-          {/* FILTRO POR SETOR */}
-          <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap shrink-0">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
-            <Search className="w-4 h-4 opacity-50" />
-            <input
-              type="text"
-              placeholder="Pesquisar equipe..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-transparent outline-none text-sm w-full text-sincro-text-primary"
+        <div className="flex gap-6 flex-1 min-h-0">
+          <div className="flex flex-col gap-4">
+            <CircularProgress 
+              percentage={100} 
+              label="Total de Equipes" 
+              value={equipes.length} 
+              colors={["#A78BFA", "#7A5BEF", "#5A3E99"]} 
+            />
+            <CircularProgress
+              percentage={100}
+              label="Total de Membros"
+              value={equipes.reduce((acc, eq) => acc + eq.numMembros, 0)}
+              colors={["#7A5BEF", "#5A3E99", "#3A2962"]}
+            />
+            <CircularProgress
+              percentage={100}
+              label="Projetos Ativos"
+              value={equipes.reduce((acc, eq) => acc + eq.projetosAtivos, 0)}
+              colors={["#5A3E99", "#3A2962", "#251A40"]}
             />
           </div>
 
-          <FilterDropdown
-            id="setor"
-            label="Setor"
-            icon={Building2}
-            options={setores.map(s => s.nome)}
-            selected={filtroSetor}
-            onChange={setFiltroSetor}
-            openDropdown={openDropdown}
-            setOpenDropdown={setOpenDropdown}
-          />
-
-          {filtroSetor.length > 0 && (
-            <button
-              onClick={() => setFiltroSetor([])}
-              className="text-xs text-white/60 hover:text-status-red transition-colors px-2"
-            >
-              Limpar tudo
-            </button>
-          )}
-
-          <button
-            onClick={() => setIsCriarModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all ml-auto"
-          >
-            <Plus className="w-4 h-4" />
-            Criar Nova Equipe
-          </button>
-        </div>
-
-        {/* GRID DE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-          {equipesFiltradas.map((equipe) => (
-            <EquipeCard key={equipe.id} equipe={equipe} onClick={() => setSelectedEquipe(equipe)} />
-          ))}
-          {equipesFiltradas.length === 0 && (
-            <div className="col-span-full text-center py-12 text-sincro-text-muted">
-              Nenhuma equipe encontrada para este setor.
+          <div className="flex-1 flex flex-col space-y-6 min-h-0">
+            {/* FILTRO POR SETOR */}
+            <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
+              <Search className="w-4 h-4 opacity-50" />
+              <input
+                type="text"
+                placeholder="Pesquisar equipe..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-transparent outline-none text-sm w-full text-sincro-text-primary"
+              />
             </div>
-          )}
-        </div>
+
+            <FilterDropdown
+              id="setor"
+              label="Setor"
+              icon={Building2}
+              options={setores.map(s => s.nome)}
+              selected={filtroSetor}
+              onChange={setFiltroSetor}
+              openDropdown={openDropdown}
+              setOpenDropdown={setOpenDropdown}
+            />
+
+            {filtroSetor.length > 0 && (
+              <button
+                onClick={() => setFiltroSetor([])}
+                className="text-xs text-white/60 hover:text-status-red transition-colors px-2"
+              >
+                Limpar tudo
+              </button>
+            )}
+
+            <button
+              onClick={() => setIsCriarModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all ml-auto"
+            >
+              <Plus className="w-4 h-4" />
+              Criar Nova Equipe
+            </button>
+          </div>
+
+          <div className="text-sm text-sincro-text-secondary px-1">
+            {equipesFiltradas.length} Equipe{equipesFiltradas.length !== 1 ? "s" : ""}
+          </div>
+
+          {/* GRID DE CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+            {equipesFiltradas.map((equipe) => (
+              <EquipeCard key={equipe.id} equipe={equipe} onClick={() => setSelectedEquipe(equipe)} />
+            ))}
+            {equipesFiltradas.length === 0 && (
+              <div className="col-span-full text-center py-12 text-sincro-text-muted">
+                Nenhuma equipe encontrada para este setor.
+              </div>
+            )}
+          </div>
+          </div>
         </div>
       </main>
 
