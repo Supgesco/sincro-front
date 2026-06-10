@@ -70,7 +70,7 @@ export default function SetoresPage() {
 
   useEffect(() => {
     const saved = getSetoresStorage()
-    if (saved) setSetores(saved)
+    if (saved) setSetores(saved.map((s: Setor) => ({ ...s, equipes: s.equipes || [] })))
   }, [])
 
   useEffect(() => {
@@ -149,16 +149,16 @@ export default function SetoresPage() {
     if (equipeEditando) {
       setSetores(prev => prev.map(s => {
         if (s.id !== setorSelecionado.id) return s
-        return { ...s, equipes: s.equipes.map(e => e.id === equipeEditando.id ? { ...e, nome: nomeEquipe } : e) }
+        return { ...s, equipes: (s.equipes || []).map(e => e.id === equipeEditando.id ? { ...e, nome: nomeEquipe } : e) }
       }))
     } else {
       const nova: Equipe = {
-        id: Math.max(0, ...setorSelecionado.equipes.map(e => e.id), 0) + 1,
+        id: Math.max(0, ...(setorSelecionado.equipes || []).map(e => e.id), 0) + 1,
         nome: nomeEquipe,
       }
       setSetores(prev => prev.map(s => {
         if (s.id !== setorSelecionado.id) return s
-        return { ...s, equipes: [...s.equipes, nova] }
+        return { ...s, equipes: [...(s.equipes || []), nova] }
       }))
     }
     setEquipeEditando(null)
@@ -169,7 +169,7 @@ export default function SetoresPage() {
     if (!setorSelecionado) return
     setSetores(prev => prev.map(s => {
       if (s.id !== setorSelecionado.id) return s
-      return { ...s, equipes: s.equipes.filter(e => e.id !== equipeId) }
+        return { ...s, equipes: (s.equipes || []).filter(e => e.id !== equipeId) }
     }))
   }
 
@@ -239,7 +239,7 @@ export default function SetoresPage() {
                   <td className="px-5 py-3">
                     <span className="inline-flex items-center gap-1.5 text-xs text-sincro-text-secondary">
                       <Users className="w-3.5 h-3.5" />
-                      {setor.equipes.length}
+                      {setor.equipes?.length || 0}
                     </span>
                   </td>
                   <td className="px-5 py-3">
@@ -335,10 +335,10 @@ export default function SetoresPage() {
               </button>
             </div>
             <div className="p-5 flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
-              {setorAtual.equipes.length === 0 ? (
+              {(!setorAtual.equipes || setorAtual.equipes.length === 0) ? (
                 <p className="text-sm text-sincro-text-muted text-center py-6">Nenhuma equipe neste setor.</p>
               ) : (
-                setorAtual.equipes.map((equipe) => (
+                (setorAtual.equipes || []).map((equipe) => (
                   <div
                     key={equipe.id}
                     className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-sincro-border bg-white/5"
