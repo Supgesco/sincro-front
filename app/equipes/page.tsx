@@ -217,18 +217,6 @@ export default function EquipesPage() {
       <Navbar />
 
       <main className="w-[85%] mx-auto py-8 flex-1 flex flex-col min-h-0">
-        {/* CABEÇALHO: Título + Botão na mesma linha */}
-        <div className="flex items-center justify-between mb-6 shrink-0">
-          <h1 className="text-[36px] font-extrabold text-sincro-text-primary leading-none">Suas Equipes</h1>
-          <button
-            onClick={() => setIsCriarModalOpen(true)}
-            className="flex items-center gap-2 h-10 px-6 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all whitespace-nowrap shadow-lg hover:scale-[1.03]"
-          >
-            <Plus className="w-4 h-4" />
-            Criar Nova Equipe
-          </button>
-        </div>
-
         {/* FILTRO POR SETOR */}
         <div className="flex items-center gap-3 p-4 border border-sincro-border rounded-2xl bg-sincro-modal-sidebar mb-4 shrink-0">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
@@ -261,6 +249,14 @@ export default function EquipesPage() {
               Limpar tudo
             </button>
           )}
+
+          <button
+            onClick={() => setIsCriarModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all ml-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Criar Nova Equipe
+          </button>
         </div>
 
         {/* GRID DE CARDS */}
