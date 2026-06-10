@@ -88,7 +88,6 @@ export default function UsuariosPage() {
   const [editando, setEditando] = useState<Usuario | null>(null)
 
   const [novoNome, setNovoNome] = useState("")
-  const [novoEmail, setNovoEmail] = useState("")
   const [novoPerfil, setNovoPerfil] = useState<Perfil>("Membro")
   const [novaEquipe, setNovaEquipe] = useState("")
   const [novoSetor, setNovoSetor] = useState("")
@@ -107,14 +106,12 @@ export default function UsuariosPage() {
     if (usuario) {
       setEditando(usuario)
       setNovoNome(usuario.nome)
-      setNovoEmail(usuario.email)
       setNovoPerfil(usuario.perfil)
       setNovaEquipe(usuario.equipe)
       setNovoSetor(usuario.setor)
     } else {
       setEditando(null)
       setNovoNome("")
-      setNovoEmail("")
       setNovoPerfil("Membro")
       setNovaEquipe("")
       setNovoSetor("")
@@ -128,16 +125,16 @@ export default function UsuariosPage() {
   }
 
   const salvarUsuario = () => {
-    if (!novoNome.trim() || !novoEmail.trim()) return
+    if (!novoNome.trim()) return
     if (editando) {
       setUsuarios(prev => prev.map(u =>
-        u.id === editando.id ? { ...u, nome: novoNome, email: novoEmail, perfil: novoPerfil, equipe: novaEquipe || "Sem equipe", setor: novoSetor || "SEIOP" } : u
+        u.id === editando.id ? { ...u, nome: novoNome, perfil: novoPerfil, equipe: novaEquipe || "Sem equipe", setor: novoSetor || "SEIOP" } : u
       ))
     } else {
       const novo: Usuario = {
         id: Math.max(0, ...usuarios.map(u => u.id)) + 1,
         nome: novoNome,
-        email: novoEmail,
+        email: "",
         perfil: novoPerfil,
         equipe: novaEquipe || "Sem equipe",
         setor: novoSetor || "SEIOP",
@@ -343,17 +340,6 @@ export default function UsuariosPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">E-mail</label>
-                <input
-                  type="email"
-                  value={novoEmail}
-                  onChange={(e) => setNovoEmail(e.target.value)}
-                  maxLength={100}
-                  className="h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
-                  placeholder="email@sincro.com"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Perfil</label>
                 <select
                   value={novoPerfil}
@@ -405,7 +391,7 @@ export default function UsuariosPage() {
               </button>
               <button
                 onClick={salvarUsuario}
-                disabled={!novoNome.trim() || !novoEmail.trim()}
+                disabled={!novoNome.trim()}
                 className="px-4 py-2 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {editando ? "Salvar Alterações" : "Criar Usuário"}
