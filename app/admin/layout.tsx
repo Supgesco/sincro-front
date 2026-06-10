@@ -3,11 +3,12 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Navbar } from "@/components/navbar"
-import { BarChart3, Users, FolderKanban, ScrollText, Settings } from "lucide-react"
+import { BarChart3, Users, FolderKanban, ScrollText, Settings, Building2 } from "lucide-react"
 
 const adminNav = [
   { icon: BarChart3, label: "Visão Geral", href: "/admin" },
   { icon: Users, label: "Usuários", href: "/admin/usuarios" },
+  { icon: Building2, label: "Setores", href: "/admin/setores" },
   { icon: FolderKanban, label: "Equipes & Projetos", href: "/admin/equipes-projetos" },
   { icon: ScrollText, label: "Logs", href: "/admin/logs" },
   { icon: Settings, label: "Configurações", href: "/admin/configuracoes" },
