@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/navbar"
 import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
-import { Plus, User, Building2 } from "lucide-react"
+import { Plus, User, Building2, ChevronDown, X } from "lucide-react"
 
 const EQUIPES_STORAGE_KEY = "sincro-equipes-data"
 const SETORES_STORAGE_KEY = "sincro-setores-data"
@@ -174,7 +174,8 @@ export default function EquipesPage() {
   const [equipes, setEquipes] = useState(equipesData)
   const [selectedEquipe, setSelectedEquipe] = useState<typeof equipesData[0] | null>(null)
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
-  const [filtroSetor, setFiltroSetor] = useState("Todos")
+  const [filtroSetor, setFiltroSetor] = useState<string[]>([])
+  const [filtroSetorAberto, setFiltroSetorAberto] = useState(false)
   const [setores, setSetores] = useState<{ id: number; nome: string }[]>([])
 
   const hasLoadedFromStorage = useRef(false)
@@ -194,9 +195,16 @@ export default function EquipesPage() {
   }, [equipes])
 
   const equipesFiltradas = equipes.filter(e => {
-    if (filtroSetor === "Todos") return true
-    return (e.setor || "SEIOP") === filtroSetor
+    if (filtroSetor.length === 0) return true
+    return filtroSetor.includes(e.setor || "SEIOP")
   })
+
+  const toggleSetor = (nome: string) => {
+    setFiltroSetor(prev => {
+      if (prev.includes(nome)) return prev.filter(s => s !== nome)
+      return [...prev, nome]
+    })
+  }
 
   const handleExcluir = (id: number) => {
     setEquipes(prev => prev.filter(e => e.id !== id))
@@ -225,31 +233,61 @@ export default function EquipesPage() {
             <Building2 className="w-4 h-4" />
             <span className="font-bold">Setor:</span>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
             <button
-              onClick={() => setFiltroSetor("Todos")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                filtroSetor === "Todos"
-                  ? "bg-sincro-text-primary text-sincro-bg"
-                  : "border border-sincro-border text-sincro-text-primary hover:bg-white/5"
-              }`}
+              onClick={() => setFiltroSetorAberto(!filtroSetorAberto)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border text-sm font-bold text-sincro-text-primary hover:bg-white/5 transition-all min-w-[200px]"
             >
-              Todos
+              <span className="flex-1 text-left truncate">
+                {filtroSetor.length === 0
+                  ? "Todos os setores"
+                  : filtroSetor.length === 1
+                    ? filtroSetor[0]
+                    : `${filtroSetor.length} setores selecionados`
+                }
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${filtroSetorAberto ? "rotate-180" : ""}`} />
             </button>
-            {setores.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setFiltroSetor(s.nome)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  filtroSetor === s.nome
-                    ? "bg-sincro-text-primary text-sincro-bg"
-                    : "border border-sincro-border text-sincro-text-primary hover:bg-white/5"
-                }`}
-              >
-                {s.nome}
-              </button>
-            ))}
+            {filtroSetorAberto && (
+              <div className="absolute top-full left-0 mt-2 w-full min-w-[250px] bg-sincro-modal-bg border border-sincro-border rounded-xl shadow-lg z-50 py-2 max-h-[300px] overflow-y-auto">
+                <button
+                  onClick={() => setFiltroSetor([])}
+                  className={`w-full px-4 py-2 text-left text-sm font-bold hover:bg-white/5 transition-colors ${
+                    filtroSetor.length === 0 ? "text-sincro-primary" : "text-sincro-text-primary"
+                  }`}
+                >
+                  Todos
+                </button>
+                {setores.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => toggleSetor(s.nome)}
+                    className={`w-full px-4 py-2 text-left text-sm font-bold hover:bg-white/5 transition-colors flex items-center justify-between ${
+                      filtroSetor.includes(s.nome) ? "text-sincro-primary" : "text-sincro-text-primary"
+                    }`}
+                  >
+                    <span>{s.nome}</span>
+                    {filtroSetor.includes(s.nome) && (
+                      <span className="w-5 h-5 rounded-full bg-sincro-primary text-white flex items-center justify-center">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+          {filtroSetor.length > 0 && (
+            <button
+              onClick={() => setFiltroSetor([])}
+              className="p-1.5 rounded-full hover:bg-white/10 text-sincro-text-secondary transition-colors"
+              title="Limpar filtro"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* GRID DE CARDS */}
