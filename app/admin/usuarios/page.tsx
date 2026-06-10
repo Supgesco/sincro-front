@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Search, Plus, UserCheck, UserX, Shield, Edit2, Trash2, X } from "lucide-react"
+import { TagList } from "@/components/tag-list"
 
 type Perfil = "Admin" | "Gestor" | "Membro"
 
@@ -284,18 +285,10 @@ export default function UsuariosPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {u.equipe.map(e => (
-                          <span key={e} className="px-2 py-0.5 rounded-full bg-sincro-primary/15 text-sincro-primary text-[10px] font-bold">{e}</span>
-                        ))}
-                      </div>
+                      <TagList items={u.equipe} color="bg-sincro-primary/15 text-sincro-primary" />
                     </td>
                     <td className="px-5 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {u.setor.map(s => (
-                          <span key={s} className="px-2 py-0.5 rounded-full bg-status-cyan/15 text-status-cyan text-[10px] font-bold">{s}</span>
-                        ))}
-                      </div>
+                      <TagList items={u.setor} color="bg-status-cyan/15 text-status-cyan" />
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${u.status === "Ativo" ? "text-status-green" : "text-status-red"}`}>
