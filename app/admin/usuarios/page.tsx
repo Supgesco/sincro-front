@@ -10,8 +10,8 @@ type Usuario = {
   nome: string
   email: string
   perfil: Perfil
-  equipe: string
-  setor: string
+  equipe: string[]
+  setor: string[]
   status: "Ativo" | "Inativo"
   ultimoAcesso: string
 }
@@ -21,23 +21,30 @@ const EQUIPES_KEY = "sincro-equipes-data"
 const SETORES_KEY = "sincro-setores-data"
 
 const usuariosSeed: Usuario[] = [
-  { id: 1, nome: "Davi Silva", email: "davi.silva@sincro.com", perfil: "Admin", equipe: "Diretoria", setor: "SEIOP", status: "Ativo", ultimoAcesso: "Agora" },
-  { id: 2, nome: "Ana Santos", email: "ana.santos@sincro.com", perfil: "Gestor", equipe: "Equipe Design", setor: "Secretaria de Saúde", status: "Ativo", ultimoAcesso: "Há 15 min" },
-  { id: 3, nome: "Carlos Silva", email: "carlos.silva@sincro.com", perfil: "Membro", equipe: "Equipe Dev", setor: "Secretaria de Saúde", status: "Ativo", ultimoAcesso: "Há 1 h" },
-  { id: 4, nome: "Mariana Souza", email: "mariana.souza@sincro.com", perfil: "Gestor", equipe: "Equipe QA", setor: "Secretaria de Educação", status: "Ativo", ultimoAcesso: "Há 2 h" },
-  { id: 5, nome: "Rodrigo Lira", email: "rodrigo.lira@sincro.com", perfil: "Membro", equipe: "Equipe Dev", setor: "Secretaria de Finanças", status: "Inativo", ultimoAcesso: "Há 3 dias" },
-  { id: 6, nome: "Sofia Mendes", email: "sofia.mendes@sincro.com", perfil: "Membro", equipe: "Equipe Design", setor: "Secretaria de Saúde", status: "Ativo", ultimoAcesso: "Há 30 min" },
-  { id: 7, nome: "Lucas Oliveira", email: "lucas.oliveira@sincro.com", perfil: "Gestor", equipe: "Equipe Marketing", setor: "SEIOP", status: "Ativo", ultimoAcesso: "Há 4 h" },
-  { id: 8, nome: "Pedro Álvares", email: "pedro.alvares@sincro.com", perfil: "Membro", equipe: "Equipe Ops", setor: "SEIOP", status: "Inativo", ultimoAcesso: "Há 1 sem" },
-  { id: 9, nome: "Camila Rocha", email: "camila.rocha@sincro.com", perfil: "Gestor", equipe: "Equipe RH", setor: "Secretaria de Administração", status: "Ativo", ultimoAcesso: "Há 1 h" },
-  { id: 10, nome: "Felipe Melo", email: "felipe.melo@sincro.com", perfil: "Membro", equipe: "Equipe Dados", setor: "Secretaria de Meio Ambiente", status: "Ativo", ultimoAcesso: "Há 20 min" },
+  { id: 1, nome: "Davi Silva", email: "davi.silva@sincro.com", perfil: "Admin", equipe: ["Diretoria"], setor: ["SEIOP"], status: "Ativo", ultimoAcesso: "Agora" },
+  { id: 2, nome: "Ana Santos", email: "ana.santos@sincro.com", perfil: "Gestor", equipe: ["Equipe Design"], setor: ["Secretaria de Saúde"], status: "Ativo", ultimoAcesso: "Há 15 min" },
+  { id: 3, nome: "Carlos Silva", email: "carlos.silva@sincro.com", perfil: "Membro", equipe: ["Equipe Dev"], setor: ["Secretaria de Saúde"], status: "Ativo", ultimoAcesso: "Há 1 h" },
+  { id: 4, nome: "Mariana Souza", email: "mariana.souza@sincro.com", perfil: "Gestor", equipe: ["Equipe QA"], setor: ["Secretaria de Educação"], status: "Ativo", ultimoAcesso: "Há 2 h" },
+  { id: 5, nome: "Rodrigo Lira", email: "rodrigo.lira@sincro.com", perfil: "Membro", equipe: ["Equipe Dev"], setor: ["Secretaria de Finanças"], status: "Inativo", ultimoAcesso: "Há 3 dias" },
+  { id: 6, nome: "Sofia Mendes", email: "sofia.mendes@sincro.com", perfil: "Membro", equipe: ["Equipe Design"], setor: ["Secretaria de Saúde"], status: "Ativo", ultimoAcesso: "Há 30 min" },
+  { id: 7, nome: "Lucas Oliveira", email: "lucas.oliveira@sincro.com", perfil: "Gestor", equipe: ["Equipe Marketing"], setor: ["SEIOP"], status: "Ativo", ultimoAcesso: "Há 4 h" },
+  { id: 8, nome: "Pedro Álvares", email: "pedro.alvares@sincro.com", perfil: "Membro", equipe: ["Equipe Ops"], setor: ["SEIOP"], status: "Inativo", ultimoAcesso: "Há 1 sem" },
+  { id: 9, nome: "Camila Rocha", email: "camila.rocha@sincro.com", perfil: "Gestor", equipe: ["Equipe RH"], setor: ["Secretaria de Administração"], status: "Ativo", ultimoAcesso: "Há 1 h" },
+  { id: 10, nome: "Felipe Melo", email: "felipe.melo@sincro.com", perfil: "Membro", equipe: ["Equipe Dados"], setor: ["Secretaria de Meio Ambiente"], status: "Ativo", ultimoAcesso: "Há 20 min" },
 ]
 
 function loadUsuarios(): Usuario[] {
   if (typeof window === "undefined") return usuariosSeed
   try {
     const raw = localStorage.getItem(USUARIOS_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const data = JSON.parse(raw)
+      return data.map((u: Usuario) => ({
+        ...u,
+        equipe: Array.isArray(u.equipe) ? u.equipe : [u.equipe || "Sem equipe"],
+        setor: Array.isArray(u.setor) ? u.setor : [u.setor || "SEIOP"],
+      }))
+    }
   } catch {}
   return usuariosSeed
 }
@@ -89,8 +96,8 @@ export default function UsuariosPage() {
 
   const [novoNome, setNovoNome] = useState("")
   const [novoPerfil, setNovoPerfil] = useState<Perfil>("Membro")
-  const [novaEquipe, setNovaEquipe] = useState("")
-  const [novoSetor, setNovoSetor] = useState("")
+  const [novosSetores, setNovosSetores] = useState<string[]>([])
+  const [novasEquipes, setNovasEquipes] = useState<string[]>([])
 
   useEffect(() => {
     setUsuarios(loadUsuarios())
@@ -107,14 +114,14 @@ export default function UsuariosPage() {
       setEditando(usuario)
       setNovoNome(usuario.nome)
       setNovoPerfil(usuario.perfil)
-      setNovaEquipe(usuario.equipe)
-      setNovoSetor(usuario.setor)
+      setNovosSetores(usuario.setor)
+      setNovasEquipes(usuario.equipe)
     } else {
       setEditando(null)
       setNovoNome("")
       setNovoPerfil("Membro")
-      setNovaEquipe("")
-      setNovoSetor("")
+      setNovosSetores([])
+      setNovasEquipes([])
     }
     setModalAberto(true)
   }
@@ -124,11 +131,19 @@ export default function UsuariosPage() {
     setEditando(null)
   }
 
+  const toggleSetor = (s: string) => {
+    setNovosSetores(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+  }
+
+  const toggleEquipe = (e: string) => {
+    setNovasEquipes(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e])
+  }
+
   const salvarUsuario = () => {
     if (!novoNome.trim()) return
     if (editando) {
       setUsuarios(prev => prev.map(u =>
-        u.id === editando.id ? { ...u, nome: novoNome, perfil: novoPerfil, equipe: novaEquipe || "Sem equipe", setor: novoSetor || "SEIOP" } : u
+        u.id === editando.id ? { ...u, nome: novoNome, perfil: novoPerfil, setor: novosSetores.length > 0 ? novosSetores : ["SEIOP"], equipe: novasEquipes.length > 0 ? novasEquipes : ["Sem equipe"] } : u
       ))
     } else {
       const novo: Usuario = {
@@ -136,8 +151,8 @@ export default function UsuariosPage() {
         nome: novoNome,
         email: "",
         perfil: novoPerfil,
-        equipe: novaEquipe || "Sem equipe",
-        setor: novoSetor || "SEIOP",
+        setor: novosSetores.length > 0 ? novosSetores : ["SEIOP"],
+        equipe: novasEquipes.length > 0 ? novasEquipes : ["Sem equipe"],
         status: "Ativo",
         ultimoAcesso: "Nunca",
       }
@@ -157,8 +172,7 @@ export default function UsuariosPage() {
   }
 
   const usuariosFiltrados = usuarios.filter(u => {
-    const matchSearch = u.nome.toLowerCase().includes(search.toLowerCase()) ||
-                        u.email.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = u.nome.toLowerCase().includes(search.toLowerCase())
     const matchPerfil = filtroPerfil === "Todos" || u.perfil === filtroPerfil
     const matchStatus = filtroStatus === "Todos" || u.status === filtroStatus
     return matchSearch && matchPerfil && matchStatus
@@ -241,8 +255,8 @@ export default function UsuariosPage() {
               <tr className="text-left">
                 <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Usuário</th>
                 <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Perfil</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Equipe</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Setor</th>
+                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Equipes</th>
+                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Setores</th>
                 <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Status</th>
                 <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted">Último Acesso</th>
                 <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-sincro-text-muted text-right">Ações</th>
@@ -260,7 +274,6 @@ export default function UsuariosPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold truncate">{u.nome}</p>
-                          <p className="text-[11px] text-sincro-text-secondary truncate">{u.email}</p>
                         </div>
                       </div>
                     </td>
@@ -270,8 +283,20 @@ export default function UsuariosPage() {
                         {u.perfil}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-sincro-text-secondary">{u.equipe}</td>
-                    <td className="px-5 py-3 text-sincro-text-secondary text-xs">{u.setor}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {u.equipe.map(e => (
+                          <span key={e} className="px-2 py-0.5 rounded-full bg-sincro-primary/15 text-sincro-primary text-[10px] font-bold">{e}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {u.setor.map(s => (
+                          <span key={s} className="px-2 py-0.5 rounded-full bg-status-cyan/15 text-status-cyan text-[10px] font-bold">{s}</span>
+                        ))}
+                      </div>
+                    </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${u.status === "Ativo" ? "text-status-green" : "text-status-red"}`}>
                         <span className={`w-2 h-2 rounded-full ${u.status === "Ativo" ? "bg-status-green" : "bg-status-red"}`} />
@@ -321,14 +346,14 @@ export default function UsuariosPage() {
 
       {modalAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md border border-sincro-border rounded-2xl bg-sincro-modal-bg shadow-2xl">
+          <div className="w-full max-w-lg border border-sincro-border rounded-2xl bg-sincro-modal-bg shadow-2xl">
             <div className="flex items-center justify-between p-5 border-b border-sincro-border">
               <h2 className="text-lg font-extrabold">{editando ? "Editar Usuário" : "Novo Usuário"}</h2>
               <button onClick={fecharModal} className="p-1.5 rounded-full hover:bg-white/10 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 flex flex-col gap-4">
+            <div className="p-5 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Nome</label>
                 <input
@@ -351,35 +376,54 @@ export default function UsuariosPage() {
                   <option value="Admin">Admin</option>
                 </select>
               </div>
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Setor</label>
-                <select
-                  value={novoSetor}
-                  onChange={(e) => {
-                    setNovoSetor(e.target.value)
-                    setNovaEquipe("")
-                  }}
-                  className="h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
-                >
-                  <option value="">Selecione o setor...</option>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Setores</label>
+                <div className="flex flex-wrap gap-1.5">
                   {setores.map(s => (
-                    <option key={s} value={s}>{s}</option>
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSetor(s)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                        novosSetores.includes(s)
+                          ? "bg-status-cyan text-white border-status-cyan"
+                          : "border-sincro-border bg-white/5 text-sincro-text-secondary hover:bg-white/10"
+                      }`}
+                    >
+                      {s}
+                    </button>
                   ))}
-                </select>
+                </div>
+                {novosSetores.length > 0 && (
+                  <p className="text-[10px] text-sincro-text-muted">{novosSetores.length} selecionado(s)</p>
+                )}
               </div>
+
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Equipe</label>
-                <select
-                  value={novaEquipe}
-                  onChange={(e) => setNovaEquipe(e.target.value)}
-                  disabled={!novoSetor}
-                  className="h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary disabled:opacity-40"
-                >
-                  <option value="">Selecione a equipe...</option>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Equipes</label>
+                <div className="flex flex-wrap gap-1.5">
                   {equipes.map(e => (
-                    <option key={e} value={e}>{e}</option>
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => toggleEquipe(e)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                        novasEquipes.includes(e)
+                          ? "bg-sincro-primary text-white border-sincro-primary"
+                          : "border-sincro-border bg-white/5 text-sincro-text-secondary hover:bg-white/10"
+                      }`}
+                    >
+                      {e}
+                    </button>
                   ))}
-                </select>
+                  {equipes.length === 0 && (
+                    <p className="text-xs text-sincro-text-muted">Nenhuma equipe cadastrada</p>
+                  )}
+                </div>
+                {novasEquipes.length > 0 && (
+                  <p className="text-[10px] text-sincro-text-muted">{novasEquipes.length} selecionada(s)</p>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 p-5 border-t border-sincro-border">

@@ -10,8 +10,11 @@ function carregarUsuarios(): { label: string; sublabel?: string }[] {
   try {
     const raw = localStorage.getItem("sincro-usuarios-data")
     if (raw) {
-      const users = JSON.parse(raw) as { nome: string; email: string; equipe: string }[]
-      return users.filter(u => u.nome).map(u => ({ label: u.nome, sublabel: `${u.equipe} · ${u.email}` }))
+      const users = JSON.parse(raw) as { nome: string; equipe: string | string[] }[]
+      return users.filter(u => u.nome).map(u => ({
+        label: u.nome,
+        sublabel: Array.isArray(u.equipe) ? u.equipe.join(", ") : u.equipe,
+      }))
     }
   } catch {}
   return []
