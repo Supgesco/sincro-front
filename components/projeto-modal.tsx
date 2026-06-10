@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Modal } from "./modal"
-import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check, Trash2 } from "lucide-react"
+import { User, X, FolderPlus, Calendar, Users, Flag, Sparkles, AlertCircle, Check, Trash2, Plus } from "lucide-react"
 
 const statusCorProjeto: Record<string, string> = {
   "Em Andamento": "text-status-cyan",
@@ -41,6 +41,7 @@ interface Projeto {
   data: string
   equipe?: string
   requerente?: string
+  gestores?: string[]
   progresso?: number
   criador: string
   status: string
@@ -68,6 +69,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
   const [comentario, setComentario] = useState("")
   const [comentarios, setComentarios] = useState(projeto.comentarios)
   const [listaSetores, setListaSetores] = useState<string[]>([])
+  const [novoGestor, setNovoGestor] = useState("")
 
   // Edit fields state
   const [isEditing, setIsEditing] = useState(false)
@@ -75,6 +77,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
   const [editDescricao, setEditDescricao] = useState(projeto.descricao || "")
   const [editData, setEditData] = useState(projeto.data)
   const [editRequerente, setEditRequerente] = useState(projeto.requerente || "")
+  const [editGestores, setEditGestores] = useState<string[]>(projeto.gestores || [])
   const [editStatus, setEditStatus] = useState(projeto.status)
   const [editUrgente, setEditUrgente] = useState(projeto.urgente)
   const [editMostrarNoCalendario, setEditMostrarNoCalendario] = useState(projeto.mostrarNoCalendario || false)
@@ -116,6 +119,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
       descricao: editDescricao,
       data: editData,
       requerente: editRequerente,
+      gestores: editGestores,
       status: editStatus,
       urgente: editUrgente,
       mostrarNoCalendario: editMostrarNoCalendario,
@@ -127,6 +131,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
     projeto.descricao = editDescricao
     projeto.data = editData
     projeto.requerente = editRequerente
+    projeto.gestores = editGestores
     projeto.status = editStatus
     projeto.urgente = editUrgente
     projeto.mostrarNoCalendario = editMostrarNoCalendario
@@ -194,6 +199,37 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-sincro-text-muted font-bold uppercase tracking-wider">Gestores:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {editGestores.map((g, i) => (
+                        <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
+                          {g}
+                          <button type="button" onClick={() => setEditGestores(editGestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-1">
+                      <input
+                        type="text"
+                        value={novoGestor}
+                        onChange={(e) => setNovoGestor(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter" && novoGestor.trim()) { e.preventDefault(); setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
+                        maxLength={80}
+                        placeholder="Gestor do projeto..."
+                        className="flex-1 text-[10px] text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { if (novoGestor.trim()) { setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
+                        className="px-2 py-0.5 rounded bg-sincro-primary/30 text-sincro-primary text-[10px] font-bold hover:bg-sincro-primary/50 transition-all"
+                      >
+                        <Plus className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -203,6 +239,14 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     <span>Criado por {projeto.criador}</span>
                     {projeto.requerente && <span>Requerente: {projeto.requerente}</span>}
                   </div>
+                  {(projeto.gestores || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {projeto.gestores!.map((g, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">{g}</span>
+                      ))}
+                      <span className="text-[10px] text-sincro-text-muted self-center">Gestor(es)</span>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -441,7 +485,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
 interface CriarProjetoModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (projeto: Partial<Projeto> & { equipe: string; requerente?: string; dataInicio?: string; prazo?: string; mostrarNoCalendario?: boolean }) => void
+  onCriar?: (projeto: Partial<Projeto> & { equipe: string; requerente?: string; gestores?: string[]; dataInicio?: string; prazo?: string; mostrarNoCalendario?: boolean }) => void
   equipesDisponiveis?: string[]
 }
 
@@ -452,6 +496,8 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
   const [descricao, setDescricao] = useState("")
   const [equipe, setEquipe] = useState(listaEquipes[0])
   const [requerente, setRequerente] = useState("")
+  const [gestores, setGestores] = useState<string[]>([])
+  const [novoGestor, setNovoGestor] = useState("")
   const [status, setStatus] = useState("Em Planejamento")
   const [dataInicio, setDataInicio] = useState(new Date().toISOString().slice(0, 10))
   const [prazo, setPrazo] = useState("")
@@ -478,6 +524,8 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
       setDescricao("")
       setEquipe(listaEquipes[0])
       setRequerente("")
+      setGestores([])
+      setNovoGestor("")
       setStatus("Em Planejamento")
       setDataInicio(new Date().toISOString().slice(0, 10))
       setPrazo("")
@@ -501,6 +549,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
       descricao,
       equipe,
       requerente,
+      gestores,
       status,
       dataInicio,
       prazo,
@@ -632,6 +681,42 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
                   <option value="Em Atraso">Em Atraso</option>
                   <option value="Suspenso">Suspenso</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Gestores do Projeto */}
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary mb-1.5 block">
+                Gestores do Projeto
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {gestores.map((g, i) => (
+                  <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
+                    {g}
+                    <button type="button" onClick={() => setGestores(gestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+                {gestores.length === 0 && <span className="text-[11px] text-sincro-text-muted">Nenhum gestor adicionado</span>}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={novoGestor}
+                  onChange={(e) => setNovoGestor(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } } }}
+                  placeholder="Nome do gestor do projeto..."
+                  maxLength={80}
+                  className="flex-1 h-10 px-4 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary focus:outline-none focus:border-sincro-text-muted transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
+                  className="h-10 px-4 rounded-xl bg-sincro-primary/30 text-sincro-primary font-bold hover:bg-sincro-primary/50 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
             </div>
 

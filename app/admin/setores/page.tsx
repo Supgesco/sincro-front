@@ -23,32 +23,40 @@ const saveSetoresStorage = (setores: Setor[]) => {
 type Equipe = {
   id: number
   nome: string
+  gestores: string[]
 }
 
 type Setor = {
   id: number
   nome: string
   descricao: string
+  gestores: string[]
   equipes: Equipe[]
 }
 
 const setoresIniciais: Setor[] = [
-  { id: 1, nome: "SEIOP", descricao: "Setor Geral — abrange todas as secretarias", equipes: [
-    { id: 1, nome: "Equipe Administrativa" },
-    { id: 2, nome: "Equipe de TI" },
-  ]},
-  { id: 2, nome: "Secretaria de Saúde", descricao: "Gestão de políticas de saúde pública", equipes: [
-    { id: 1, nome: "Equipe Vigilância" },
-  ]},
-  { id: 3, nome: "Secretaria de Educação", descricao: "Gestão de políticas educacionais", equipes: [] },
-  { id: 4, nome: "Secretaria de Obras", descricao: "Infraestrutura e obras públicas", equipes: [
-    { id: 1, nome: "Equipe Projetos" },
-    { id: 2, nome: "Equipe Fiscalização" },
-  ]},
-  { id: 5, nome: "Secretaria de Finanças", descricao: "Gestão financeira e orçamentária", equipes: [] },
-  { id: 6, nome: "Secretaria de Administração", descricao: "Gestão administrativa e de pessoal", equipes: [] },
-  { id: 7, nome: "Secretaria de Meio Ambiente", descricao: "Políticas ambientais e sustentabilidade", equipes: [] },
-  { id: 8, nome: "Secretaria de Transporte", descricao: "Mobilidade e transporte público", equipes: [] },
+  {
+    id: 1, nome: "SEIOP", descricao: "Setor Geral — abrange todas as secretarias", gestores: ["Davi Silva", "Carlos Lima"], equipes: [
+      { id: 1, nome: "Equipe Administrativa", gestores: ["Ana Souza"] },
+      { id: 2, nome: "Equipe de TI", gestores: ["Pedro Santos"] },
+    ]
+  },
+  {
+    id: 2, nome: "Secretaria de Saúde", descricao: "Gestão de políticas de saúde pública", gestores: ["Dr. Marcos Oliveira"], equipes: [
+      { id: 1, nome: "Equipe Vigilância", gestores: ["Julia Lima"] },
+    ]
+  },
+  { id: 3, nome: "Secretaria de Educação", descricao: "Gestão de políticas educacionais", gestores: ["Profa. Maria Costa"], equipes: [] },
+  {
+    id: 4, nome: "Secretaria de Obras", descricao: "Infraestrutura e obras públicas", gestores: ["Eng. Roberto Alves"], equipes: [
+      { id: 1, nome: "Equipe Projetos", gestores: ["Lucas Mendes"] },
+      { id: 2, nome: "Equipe Fiscalização", gestores: ["Fernanda Rocha"] },
+    ]
+  },
+  { id: 5, nome: "Secretaria de Finanças", descricao: "Gestão financeira e orçamentária", gestores: ["Contador Felipe Melo"], equipes: [] },
+  { id: 6, nome: "Secretaria de Administração", descricao: "Gestão administrativa e de pessoal", gestores: ["Dir. Camila Rocha"], equipes: [] },
+  { id: 7, nome: "Secretaria de Meio Ambiente", descricao: "Políticas ambientais e sustentabilidade", gestores: ["Biól. Sofia Mendes"], equipes: [] },
+  { id: 8, nome: "Secretaria de Transporte", descricao: "Mobilidade e transporte público", gestores: ["Coord. Rodrigo Lira"], equipes: [] },
 ]
 
 const SEIOP_ID = 1
@@ -60,11 +68,15 @@ export default function SetoresPage() {
   const [editando, setEditando] = useState<Setor | null>(null)
   const [nome, setNome] = useState("")
   const [descricao, setDescricao] = useState("")
+  const [gestores, setGestores] = useState<string[]>([])
+  const [novoGestor, setNovoGestor] = useState("")
 
   const [setorSelecionado, setSetorSelecionado] = useState<Setor | null>(null)
   const [modalEquipesAberto, setModalEquipesAberto] = useState(false)
   const [equipeEditando, setEquipeEditando] = useState<Equipe | null>(null)
   const [nomeEquipe, setNomeEquipe] = useState("")
+  const [gestoresEquipe, setGestoresEquipe] = useState<string[]>([])
+  const [novoGestorEquipe, setNovoGestorEquipe] = useState("")
 
   const hasLoadedFromStorage = useRef(false)
 
@@ -86,11 +98,14 @@ export default function SetoresPage() {
       setEditando(setor)
       setNome(setor.nome)
       setDescricao(setor.descricao)
+      setGestores(setor.gestores || [])
     } else {
       setEditando(null)
       setNome("")
       setDescricao("")
+      setGestores([])
     }
+    setNovoGestor("")
     setModalAberto(true)
   }
 
@@ -99,17 +114,20 @@ export default function SetoresPage() {
     setEditando(null)
     setNome("")
     setDescricao("")
+    setGestores([])
+    setNovoGestor("")
   }
 
   const salvarSetor = () => {
     if (!nome.trim()) return
     if (editando) {
-      setSetores(prev => prev.map(s => s.id === editando.id ? { ...s, nome, descricao } : s))
+      setSetores(prev => prev.map(s => s.id === editando.id ? { ...s, nome, descricao, gestores } : s))
     } else {
       const novo: Setor = {
         id: Math.max(0, ...setores.map(s => s.id)) + 1,
         nome,
         descricao,
+        gestores,
         equipes: [],
       }
       setSetores(prev => [...prev, novo])
@@ -132,16 +150,21 @@ export default function SetoresPage() {
     setSetorSelecionado(null)
     setEquipeEditando(null)
     setNomeEquipe("")
+    setGestoresEquipe([])
+    setNovoGestorEquipe("")
   }
 
   const abrirModalEquipe = (equipe?: Equipe) => {
     if (equipe) {
       setEquipeEditando(equipe)
       setNomeEquipe(equipe.nome)
+      setGestoresEquipe(equipe.gestores || [])
     } else {
       setEquipeEditando(null)
       setNomeEquipe("")
+      setGestoresEquipe([])
     }
+    setNovoGestorEquipe("")
   }
 
   const salvarEquipe = () => {
@@ -149,12 +172,13 @@ export default function SetoresPage() {
     if (equipeEditando) {
       setSetores(prev => prev.map(s => {
         if (s.id !== setorSelecionado.id) return s
-        return { ...s, equipes: (s.equipes || []).map(e => e.id === equipeEditando.id ? { ...e, nome: nomeEquipe } : e) }
+        return { ...s, equipes: (s.equipes || []).map(e => e.id === equipeEditando.id ? { ...e, nome: nomeEquipe, gestores: gestoresEquipe } : e) }
       }))
     } else {
       const nova: Equipe = {
         id: Math.max(0, ...(setorSelecionado.equipes || []).map(e => e.id), 0) + 1,
         nome: nomeEquipe,
+        gestores: gestoresEquipe,
       }
       setSetores(prev => prev.map(s => {
         if (s.id !== setorSelecionado.id) return s
@@ -163,13 +187,15 @@ export default function SetoresPage() {
     }
     setEquipeEditando(null)
     setNomeEquipe("")
+    setGestoresEquipe([])
+    setNovoGestorEquipe("")
   }
 
   const removerEquipe = (equipeId: number) => {
     if (!setorSelecionado) return
     setSetores(prev => prev.map(s => {
       if (s.id !== setorSelecionado.id) return s
-        return { ...s, equipes: (s.equipes || []).filter(e => e.id !== equipeId) }
+      return { ...s, equipes: (s.equipes || []).filter(e => e.id !== equipeId) }
     }))
   }
 
@@ -309,6 +335,37 @@ export default function SetoresPage() {
                   placeholder="Descreva o setor..."
                 />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-sincro-text-secondary">Gestores do Setor</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {gestores.map((g, i) => (
+                    <span key={i} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-sincro-primary/20 text-sincro-primary text-xs font-bold">
+                      {g}
+                      <button type="button" onClick={() => setGestores(gestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  {gestores.length === 0 && <span className="text-xs text-sincro-text-muted">Nenhum gestor adicionado</span>}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    value={novoGestor}
+                    onChange={(e) => setNovoGestor(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && novoGestor.trim()) { e.preventDefault(); setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
+                    maxLength={80}
+                    className="flex-1 h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
+                    placeholder="Nome do gestor..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
+                    className="px-4 h-10 rounded-full bg-sincro-primary text-white text-sm font-bold hover:brightness-110 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="flex items-center justify-end gap-2 p-5 border-t border-sincro-border">
               <button onClick={fecharModalSetor} className="px-4 py-2 rounded-full border border-sincro-border text-sm font-bold hover:bg-white/10 transition-all">
@@ -372,22 +429,51 @@ export default function SetoresPage() {
                 ))
               )}
 
-              <div className="flex items-center gap-2 mt-2">
-                <input
-                  value={nomeEquipe}
-                  onChange={(e) => setNomeEquipe(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") salvarEquipe() }}
-                  maxLength={100}
-                  className="flex-1 h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
-                  placeholder={equipeEditando ? "Editar nome da equipe..." : "Nova equipe..."}
-                />
-                <button
-                  onClick={salvarEquipe}
-                  disabled={!nomeEquipe.trim()}
-                  className="h-10 px-4 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {equipeEditando ? "Salvar" : "Adicionar"}
-                </button>
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={nomeEquipe}
+                    onChange={(e) => setNomeEquipe(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") salvarEquipe() }}
+                    maxLength={100}
+                    className="flex-1 h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
+                    placeholder={equipeEditando ? "Editar nome da equipe..." : "Nova equipe..."}
+                  />
+                  <button
+                    onClick={salvarEquipe}
+                    disabled={!nomeEquipe.trim()}
+                    className="h-10 px-4 rounded-full bg-status-green text-white text-sm font-extrabold hover:brightness-110 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {equipeEditando ? "Salvar" : "Adicionar"}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {gestoresEquipe.map((g, i) => (
+                    <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
+                      {g}
+                      <button type="button" onClick={() => setGestoresEquipe(gestoresEquipe.filter((_, idx) => idx !== i))} className="hover:text-status-red">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={novoGestorEquipe}
+                    onChange={(e) => setNovoGestorEquipe(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && novoGestorEquipe.trim()) { e.preventDefault(); setGestoresEquipe([...gestoresEquipe, novoGestorEquipe.trim()]); setNovoGestorEquipe("") } }}
+                    maxLength={80}
+                    className="flex-1 h-8 px-3 rounded-full bg-white/10 border border-white/20 outline-none text-xs text-sincro-text-primary"
+                    placeholder="Gestor da equipe..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { if (novoGestorEquipe.trim()) { setGestoresEquipe([...gestoresEquipe, novoGestorEquipe.trim()]); setNovoGestorEquipe("") } }}
+                    className="h-8 px-3 rounded-full bg-sincro-primary/30 text-sincro-primary text-xs font-bold hover:bg-sincro-primary/50 transition-all"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

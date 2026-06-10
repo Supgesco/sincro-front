@@ -37,7 +37,7 @@ const equipesData = [
   {
     id: 1,
     nome: "Nome da Equipe 1",
-    gestor: "Nome Gestor",
+    gestores: ["Ana Souza"],
     setor: "SEIOP",
     projetosAtivos: 4,
     emAndamento: 2,
@@ -59,7 +59,7 @@ const equipesData = [
   {
     id: 2,
     nome: "Nome da Equipe 2",
-    gestor: "Nome Gestor",
+    gestores: ["Carlos Lima"],
     setor: "Secretaria de Saúde",
     projetosAtivos: 6,
     emAndamento: 3,
@@ -83,7 +83,7 @@ const equipesData = [
   {
     id: 3,
     nome: "Nome da Equipe 3",
-    gestor: "Nome Gestor",
+    gestores: ["Carlos Lima"],
     setor: "SEIOP",
     projetosAtivos: 3,
     emAndamento: 5,
@@ -95,7 +95,7 @@ const equipesData = [
   {
     id: 4,
     nome: "Nome da Equipe 4",
-    gestor: "Nome Gestor",
+    gestores: ["Carlos Lima"],
     setor: "Secretaria de Educação",
     projetosAtivos: 2,
     emAndamento: 1,
@@ -323,7 +323,7 @@ export default function EquipesPage() {
             ...equipesData[0],
             id: equipes.length > 0 ? Math.max(...equipes.map(e => e.id)) + 1 : 1,
             nome: novaEquipe.nome,
-            gestor: novaEquipe.gestor,
+            gestores: novaEquipe.gestores,
             descricao: novaEquipe.descricao,
             setor: novaEquipe.setor || "SEIOP",
             numMembros: novaEquipe.membros.length,

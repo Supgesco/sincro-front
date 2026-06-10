@@ -20,7 +20,7 @@ interface ProjetoEst {
 interface Equipe {
   id: number
   nome: string
-  gestor: string
+  gestores: string[]
   descricao?: string
   setor: string
   membros: Membro[]
@@ -38,9 +38,10 @@ interface EquipeModalProps {
 export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: EquipeModalProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editNome, setEditNome] = useState(equipe.nome)
-  const [editGestor, setEditGestor] = useState(equipe.gestor)
+  const [editGestores, setEditGestores] = useState<string[]>(equipe.gestores || [])
   const [editDescricao, setEditDescricao] = useState(equipe.descricao || "")
   const [editMembros, setEditMembros] = useState<Membro[]>(equipe.membros)
+  const [novoGestor, setNovoGestor] = useState("")
 
   const [novoMembroNome, setNovoMembroNome] = useState("")
   const [novoMembroStatus, setNovoMembroStatus] = useState("")
@@ -54,7 +55,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
     const updated: Equipe = {
       ...equipe,
       nome: editNome,
-      gestor: editGestor,
+      gestores: editGestores,
       descricao: editDescricao,
       membros: editMembros,
     }
@@ -138,27 +139,50 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
 
           <div className="border-t border-sincro-border" />
 
-          {/* Card do Gestor */}
+          {/* Card dos Gestores */}
           <div className="flex items-center gap-3 p-3 rounded-xl border border-sincro-border bg-sincro-modal-sidebar">
             <div className="w-12 h-12 rounded-full bg-sincro-bg-accent border border-sincro-border flex items-center justify-center shrink-0">
               <User className="w-6 h-6 text-sincro-text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               {isEditing ? (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-sincro-text-muted font-bold uppercase tracking-wider">Gestor:</span>
-                  <input
-                    type="text"
-                    value={editGestor}
-                    onChange={(e) => setEditGestor(e.target.value)}
-                    maxLength={80}
-                    className="text-sm font-bold text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 w-full focus:outline-none"
-                  />
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] text-sincro-text-muted font-bold uppercase tracking-wider">Gestores da Equipe:</span>
+                  <div className="flex flex-wrap gap-1.5 mb-1">
+                    {editGestores.map((g, i) => (
+                      <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
+                        {g}
+                        <button type="button" onClick={() => setEditGestores(editGestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={novoGestor}
+                      onChange={(e) => setNovoGestor(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && novoGestor.trim()) { e.preventDefault(); setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
+                      maxLength={80}
+                      placeholder="Adicionar gestor..."
+                      className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 w-full focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { if (novoGestor.trim()) { setEditGestores([...editGestores, novoGestor.trim()]); setNovoGestor("") } }}
+                      className="px-2 py-1 rounded bg-sincro-primary/30 text-sincro-primary text-xs font-bold hover:bg-sincro-primary/50 transition-all"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
-                  <h3 className="text-sm font-bold text-sincro-modal-text leading-tight">{equipe.gestor}</h3>
-                  <p className="text-[11px] text-sincro-text-secondary">Gestor de Equipe</p>
+                  <h3 className="text-sm font-bold text-sincro-modal-text leading-tight">
+                    {(equipe.gestores || []).length > 0 ? equipe.gestores.join(", ") : "Sem gestor"}
+                  </h3>
+                  <p className="text-[11px] text-sincro-text-secondary">Gestor(es) de Equipe</p>
                 </>
               )}
             </div>
@@ -379,12 +403,13 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
 interface CriarEquipeModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (equipe: { nome: string; gestor: string; descricao: string; setor: string; membros: { nome: string; status: string; ativo: boolean }[] }) => void
+  onCriar?: (equipe: { nome: string; gestores: string[]; descricao: string; setor: string; membros: { nome: string; status: string; ativo: boolean }[] }) => void
 }
 
 export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalProps) {
   const [nome, setNome] = useState("")
-  const [gestor, setGestor] = useState("")
+  const [gestores, setGestores] = useState<string[]>([])
+  const [novoGestor, setNovoGestor] = useState("")
   const [descricao, setDescricao] = useState("")
   const [setor, setSetor] = useState("SEIOP")
   const [membros, setMembros] = useState<{ nome: string; status: string; ativo: boolean }[]>([])
@@ -395,7 +420,8 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
   useEffect(() => {
     if (isOpen) {
       setNome("")
-      setGestor("")
+      setGestores([])
+      setNovoGestor("")
       setDescricao("")
       setSetor("SEIOP")
       setMembros([])
@@ -431,7 +457,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
     if (!nome.trim()) return
     onCriar?.({
       nome: nome.trim(),
-      gestor: gestor.trim() || "Sem gestor",
+      gestores: gestores.length > 0 ? gestores : ["Sem gestor"],
       descricao: descricao.trim(),
       setor: setor || "SEIOP",
       membros,
@@ -490,16 +516,37 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
-                Gestor
+                Gestores da Equipe
               </label>
-              <input
-                type="text"
-                value={gestor}
-                onChange={(e) => setGestor(e.target.value)}
-                placeholder="Ex: João Silva"
-                maxLength={80}
-                className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
-              />
+              <div className="flex flex-wrap gap-1.5 mb-1">
+                {gestores.map((g, i) => (
+                  <span key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sincro-primary/20 text-sincro-primary text-[10px] font-bold">
+                    {g}
+                    <button type="button" onClick={() => setGestores(gestores.filter((_, idx) => idx !== i))} className="hover:text-status-red transition-colors">
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </span>
+                ))}
+                {gestores.length === 0 && <span className="text-[11px] text-sincro-text-muted">Nenhum gestor adicionado</span>}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={novoGestor}
+                  onChange={(e) => setNovoGestor(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } } }}
+                  placeholder="Nome do gestor..."
+                  maxLength={80}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => { if (novoGestor.trim()) { setGestores([...gestores, novoGestor.trim()]); setNovoGestor("") } }}
+                  className="px-4 py-2.5 rounded-xl bg-sincro-primary/30 text-sincro-primary font-bold hover:bg-sincro-primary/50 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
