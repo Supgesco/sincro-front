@@ -11,6 +11,28 @@ import { useToast } from "@/components/toast"
 
 const STORAGE_KEY = "sincro-tarefas-finalizadas"
 
+const mesesExtenso = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+]
+
+const parseDataExtenso = (data: string): Date | null => {
+  if (!data || data === "Sem prazo determinado") return null
+  const match = data.match(/(\d+)\s+de\s+(\w+)\s+de\s+(\d{4})/)
+  if (!match) {
+    if (data.includes("/")) {
+      const [dia, mes, ano] = data.split("/").map(Number)
+      if (dia && mes && ano) return new Date(ano, mes - 1, dia)
+    }
+    return null
+  }
+  const dia = parseInt(match[1], 10)
+  const mesIdx = mesesExtenso.indexOf(match[2])
+  const ano = parseInt(match[3], 10)
+  if (mesIdx === -1) return null
+  return new Date(ano, mesIdx, dia)
+}
+
 type FinalizedInfo = { id: number; finalizadoPor: string; finalizadoEm: string }
 
 const getFinalized = (): Record<number, FinalizedInfo> => {
@@ -389,8 +411,9 @@ export default function DashboardPage() {
         })
         const atrasadas = updated.filter(t => {
           if (t.status === "Finalizado") return false
-          const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
-          const entrega = new Date(ano, mes - 1, dia)
+          if (!t.dataEntrega || t.dataEntrega === "Sem prazo determinado") return false
+          const entrega = parseDataExtenso(t.dataEntrega)
+          if (!entrega) return false
           const hoje = new Date()
           hoje.setHours(0, 0, 0, 0)
           return entrega < hoje
@@ -436,8 +459,9 @@ export default function DashboardPage() {
   const totalTarefas = tarefas.length
   const getStatusEfetivo = (t: { status: string; dataEntrega: string }): string => {
     if (t.status === "Finalizado") return "Finalizado"
-    const [dia, mes, ano] = t.dataEntrega.split("/").map(Number)
-    const entrega = new Date(ano, mes - 1, dia)
+    if (!t.dataEntrega || t.dataEntrega === "Sem prazo determinado") return t.status
+    const entrega = parseDataExtenso(t.dataEntrega)
+    if (!entrega) return t.status
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
     if (entrega < hoje) return "Em Atraso"
@@ -566,11 +590,10 @@ export default function DashboardPage() {
     })
 
     tarefas.forEach(tarefa => {
-      if (tarefa.mostrarNoCalendario && tarefa.dataEntrega) {
-        const [dia, mes, ano] = tarefa.dataEntrega.split("/").map(Number)
-        if (dia && mes && ano) {
-          const data = new Date(ano, mes - 1, dia)
-          const chave = chaveData(data)
+      if (tarefa.mostrarNoCalendario && tarefa.dataEntrega && tarefa.dataEntrega !== "Sem prazo determinado") {
+        const entrega = parseDataExtenso(tarefa.dataEntrega)
+        if (entrega) {
+          const chave = chaveData(entrega)
           if (!eventos[chave]) eventos[chave] = []
           const cor = tarefa.status === "Finalizado" ? "bg-status-green/80" :
                      tarefa.urgente ? "bg-status-red/80" : "bg-status-cyan/80"
@@ -736,10 +759,17 @@ export default function DashboardPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
                         complexidadeCor[tarefa.complexidade] || "border-sincro-border text-sincro-text-primary"
                       }`}>{tarefa.complexidade}</span>
-                      <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {tarefa.dataEntrega}
-                      </span>
+                      {tarefa.dataEntrega === "Sem prazo determinado" ? (
+                        <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-dashed border-sincro-border text-sincro-text-muted">
+                          <Calendar className="w-3 h-3" />
+                          Sem prazo
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {tarefa.dataEntrega}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
