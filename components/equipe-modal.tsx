@@ -22,6 +22,7 @@ interface Equipe {
   nome: string
   gestor: string
   descricao?: string
+  setor: string
   membros: Membro[]
   projetos: ProjetoEst[]
 }
@@ -31,9 +32,10 @@ interface EquipeModalProps {
   onClose: () => void
   equipe: Equipe
   onSave?: (equipe: Equipe) => void
+  onDelete?: (id: number) => void
 }
 
-export function EquipeModal({ isOpen, onClose, equipe, onSave }: EquipeModalProps) {
+export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: EquipeModalProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editNome, setEditNome] = useState(equipe.nome)
   const [editGestor, setEditGestor] = useState(equipe.gestor)
@@ -296,13 +298,24 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave }: EquipeModalProp
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 h-9 px-4 rounded-full border border-sincro-border text-sincro-modal-text text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-status-cyan shrink-0" />
-                Editar Equipe
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 h-9 px-4 rounded-full border border-sincro-border text-sincro-modal-text text-xs font-semibold hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-status-cyan shrink-0" />
+                  Editar Equipe
+                </button>
+                {onDelete && (
+                  <button
+                    onClick={() => { onDelete(equipe.id); onClose() }}
+                    className="flex items-center gap-2 h-9 px-4 rounded-full border border-status-red/30 text-status-red text-xs font-semibold hover:bg-status-red-bg active:scale-95 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Excluir
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -361,25 +374,37 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave }: EquipeModalProp
 interface CriarEquipeModalProps {
   isOpen: boolean
   onClose: () => void
-  onCriar?: (equipe: { nome: string; gestor: string; descricao: string; membros: { nome: string; status: string; ativo: boolean }[] }) => void
+  onCriar?: (equipe: { nome: string; gestor: string; descricao: string; setor: string; membros: { nome: string; status: string; ativo: boolean }[] }) => void
 }
 
 export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalProps) {
   const [nome, setNome] = useState("")
   const [gestor, setGestor] = useState("")
   const [descricao, setDescricao] = useState("")
+  const [setor, setSetor] = useState("SEIOP")
   const [membros, setMembros] = useState<{ nome: string; status: string; ativo: boolean }[]>([])
   const [novoMembroNome, setNovoMembroNome] = useState("")
   const [touched, setTouched] = useState(false)
+  const [setores, setSetores] = useState<{ id: number; nome: string }[]>([])
 
   useEffect(() => {
     if (isOpen) {
       setNome("")
       setGestor("")
       setDescricao("")
+      setSetor("SEIOP")
       setMembros([])
       setNovoMembroNome("")
       setTouched(false)
+      try {
+        const raw = localStorage.getItem("sincro-setores-data")
+        if (raw) {
+          const data = JSON.parse(raw)
+          setSetores(data.map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome })))
+        }
+      } catch {
+        setSetores([{ id: 1, nome: "SEIOP" }])
+      }
     }
   }, [isOpen])
 
@@ -403,6 +428,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
       nome: nome.trim(),
       gestor: gestor.trim() || "Sem gestor",
       descricao: descricao.trim(),
+      setor: setor || "SEIOP",
       membros,
     })
     onClose()
@@ -480,6 +506,21 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
                 rows={3}
                 className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors resize-none"
               />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-sincro-modal-text uppercase tracking-wider">
+                Setor
+              </label>
+              <select
+                value={setor}
+                onChange={(e) => setSetor(e.target.value)}
+                className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
+              >
+                {setores.map((s) => (
+                  <option key={s.id} value={s.nome}>{s.nome}</option>
+                ))}
+              </select>
             </div>
 
             <div className="flex flex-col gap-2">

@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import { Navbar } from "@/components/navbar"
 import { EquipeModal, CriarEquipeModal } from "@/components/equipe-modal"
-import { Plus, User } from "lucide-react"
+import { Plus, User, Building2 } from "lucide-react"
 
 const EQUIPES_STORAGE_KEY = "sincro-equipes-data"
+const SETORES_STORAGE_KEY = "sincro-setores-data"
 
 const getEquipesStorage = () => {
   if (typeof window === "undefined") return null
@@ -22,11 +23,21 @@ const saveEquipesStorage = (equipes: typeof equipesData) => {
   localStorage.setItem(EQUIPES_STORAGE_KEY, JSON.stringify(equipes))
 }
 
+const getSetoresStorage = (): { id: number; nome: string }[] => {
+  if (typeof window === "undefined") return [{ id: 1, nome: "SEIOP" }]
+  try {
+    const raw = localStorage.getItem(SETORES_STORAGE_KEY)
+    if (raw) return JSON.parse(raw).map((s: { id: number; nome: string }) => ({ id: s.id, nome: s.nome }))
+  } catch {}
+  return [{ id: 1, nome: "SEIOP" }]
+}
+
 const equipesData = [
   {
     id: 1,
     nome: "Nome da Equipe 1",
     gestor: "Nome Gestor",
+    setor: "SEIOP",
     projetosAtivos: 4,
     emAndamento: 2,
     emAtraso: 1,
@@ -48,6 +59,7 @@ const equipesData = [
     id: 2,
     nome: "Nome da Equipe 2",
     gestor: "Nome Gestor",
+    setor: "Secretaria de Saúde",
     projetosAtivos: 6,
     emAndamento: 3,
     emAtraso: 3,
@@ -71,6 +83,7 @@ const equipesData = [
     id: 3,
     nome: "Nome da Equipe 3",
     gestor: "Nome Gestor",
+    setor: "SEIOP",
     projetosAtivos: 3,
     emAndamento: 5,
     emAtraso: 0,
@@ -82,6 +95,7 @@ const equipesData = [
     id: 4,
     nome: "Nome da Equipe 4",
     gestor: "Nome Gestor",
+    setor: "Secretaria de Educação",
     projetosAtivos: 2,
     emAndamento: 1,
     emAtraso: 2,
@@ -109,6 +123,10 @@ function EquipeCard({ equipe, onClick }: { equipe: typeof equipesData[0]; onClic
         <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--sincro-team-card-text-muted)" }}>
           <User className="w-3.5 h-3.5" />
           Gestor: {equipe.gestor}
+        </p>
+        <p className="text-[10px] flex items-center gap-1.5" style={{ color: "var(--sincro-team-card-text-muted)" }}>
+          <Building2 className="w-3 h-3" />
+          {equipe.setor || "SEIOP"}
         </p>
       </div>
 
@@ -156,12 +174,15 @@ export default function EquipesPage() {
   const [equipes, setEquipes] = useState(equipesData)
   const [selectedEquipe, setSelectedEquipe] = useState<typeof equipesData[0] | null>(null)
   const [isCriarModalOpen, setIsCriarModalOpen] = useState(false)
+  const [filtroSetor, setFiltroSetor] = useState("Todos")
+  const [setores, setSetores] = useState<{ id: number; nome: string }[]>([])
 
   const hasLoadedFromStorage = useRef(false)
 
   useEffect(() => {
     const saved = getEquipesStorage()
     if (saved) setEquipes(saved)
+    setSetores(getSetoresStorage())
   }, [])
 
   useEffect(() => {
@@ -171,6 +192,15 @@ export default function EquipesPage() {
     }
     saveEquipesStorage(equipes)
   }, [equipes])
+
+  const equipesFiltradas = equipes.filter(e => {
+    if (filtroSetor === "Todos") return true
+    return (e.setor || "SEIOP") === filtroSetor
+  })
+
+  const handleExcluir = (id: number) => {
+    setEquipes(prev => prev.filter(e => e.id !== id))
+  }
 
   return (
     <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
@@ -189,11 +219,49 @@ export default function EquipesPage() {
           </button>
         </div>
 
+        {/* FILTRO POR SETOR */}
+        <div className="flex items-center gap-3 mb-4 shrink-0">
+          <div className="flex items-center gap-2 text-sm text-sincro-text-secondary">
+            <Building2 className="w-4 h-4" />
+            <span className="font-bold">Setor:</span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setFiltroSetor("Todos")}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                filtroSetor === "Todos"
+                  ? "bg-sincro-text-primary text-sincro-bg"
+                  : "border border-sincro-border text-sincro-text-primary hover:bg-white/5"
+              }`}
+            >
+              Todos
+            </button>
+            {setores.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setFiltroSetor(s.nome)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  filtroSetor === s.nome
+                    ? "bg-sincro-text-primary text-sincro-bg"
+                    : "border border-sincro-border text-sincro-text-primary hover:bg-white/5"
+                }`}
+              >
+                {s.nome}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* GRID DE CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto min-h-0 p-1 pb-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-sincro-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-          {equipes.map((equipe) => (
+          {equipesFiltradas.map((equipe) => (
             <EquipeCard key={equipe.id} equipe={equipe} onClick={() => setSelectedEquipe(equipe)} />
           ))}
+          {equipesFiltradas.length === 0 && (
+            <div className="col-span-full text-center py-12 text-sincro-text-muted">
+              Nenhuma equipe encontrada para este setor.
+            </div>
+          )}
         </div>
       </main>
 
@@ -206,6 +274,7 @@ export default function EquipesPage() {
             setEquipes(prev => prev.map(e => e.id === updated.id ? { ...e, ...updated } : e))
             setSelectedEquipe({ ...selectedEquipe, ...updated })
           }}
+          onDelete={handleExcluir}
         />
       )}
 
@@ -219,6 +288,7 @@ export default function EquipesPage() {
             nome: novaEquipe.nome,
             gestor: novaEquipe.gestor,
             descricao: novaEquipe.descricao,
+            setor: novaEquipe.setor || "SEIOP",
             numMembros: novaEquipe.membros.length,
             membros: novaEquipe.membros.map(m => ({ nome: m.nome, status: m.status, ativo: m.ativo })),
             projetosAtivos: 0,
