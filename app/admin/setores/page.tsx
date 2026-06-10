@@ -204,6 +204,7 @@ export default function SetoresPage() {
             placeholder="Buscar setor..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            maxLength={100}
             className="bg-transparent outline-none text-sm w-full text-sincro-text-primary"
           />
         </div>
@@ -292,6 +293,7 @@ export default function SetoresPage() {
                 <input
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
+                  maxLength={100}
                   className="h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
                   placeholder="Ex.: Secretaria de Saúde"
                 />
@@ -302,6 +304,7 @@ export default function SetoresPage() {
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   rows={3}
+                  maxLength={500}
                   className="h-24 px-4 py-3 rounded-xl bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary resize-none"
                   placeholder="Descreva o setor..."
                 />
@@ -374,6 +377,7 @@ export default function SetoresPage() {
                   value={nomeEquipe}
                   onChange={(e) => setNomeEquipe(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") salvarEquipe() }}
+                  maxLength={100}
                   className="flex-1 h-10 px-4 rounded-full bg-white/10 border border-white/20 outline-none text-sm text-sincro-text-primary"
                   placeholder={equipeEditando ? "Editar nome da equipe..." : "Nova equipe..."}
                 />

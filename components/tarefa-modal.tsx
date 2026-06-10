@@ -275,6 +275,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                   type="text"
                   value={editNome}
                   onChange={(e) => setEditNome(e.target.value)}
+                  maxLength={100}
                   className="text-2xl font-bold text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 focus:outline-none flex-1 min-w-0"
                 />
               ) : (
@@ -420,6 +421,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                     value={novoMembro}
                     onChange={(e) => setNovoMembro(e.target.value)}
                     placeholder="Adicionar..."
+                    maxLength={80}
                     className="px-2 py-0.5 rounded-full text-xs bg-sincro-bg-input border border-sincro-border text-sincro-text-primary focus:outline-none"
                   />
                   <button
@@ -460,6 +462,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 <textarea
                   value={editDescricao}
                   onChange={(e) => setEditDescricao(e.target.value)}
+                  maxLength={500}
                   className="w-full min-h-[100px] bg-transparent text-sincro-text-primary focus:outline-none resize-none text-sm leading-relaxed"
                   placeholder="Digite a descrição da tarefa..."
                 />
@@ -501,6 +504,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                         type="text"
                         value={item.texto}
                         onChange={(e) => handleEditChecklistItem(item.id, e.target.value)}
+                        maxLength={150}
                         className="bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 text-xs text-sincro-text-primary focus:outline-none flex-1"
                       />
                       <button
@@ -528,6 +532,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                     value={novoChecklistItem}
                     onChange={(e) => setNovoChecklistItem(e.target.value)}
                     placeholder="Adicionar novo item..."
+                    maxLength={150}
                     className="bg-sincro-bg-input border border-sincro-border rounded-full px-3 py-1.5 text-xs text-sincro-text-primary focus:outline-none flex-1"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleAddChecklistItem()
@@ -663,6 +668,7 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
                 type="text"
                 value={comentario}
                 onChange={(e) => setComentario(e.target.value)}
+                maxLength={500}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault()
@@ -808,6 +814,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex.: Atualizar documentação da API"
+                maxLength={100}
                 className={`w-full h-11 px-4 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none transition-colors ${nomeInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
                 autoFocus
               />
@@ -827,6 +834,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
+                maxLength={500}
                 placeholder="Detalhe o que precisa ser feito e o critério de aceite..."
                 className="w-full px-4 py-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none focus:border-sincro-text-muted resize-none transition-colors"
               />

@@ -120,6 +120,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                   type="text"
                   value={editNome}
                   onChange={(e) => setEditNome(e.target.value)}
+                  maxLength={100}
                   className="text-3xl font-bold text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2.5 py-1 focus:outline-none w-full"
                   placeholder="Nome da Equipe"
                 />
@@ -150,6 +151,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                     type="text"
                     value={editGestor}
                     onChange={(e) => setEditGestor(e.target.value)}
+                    maxLength={80}
                     className="text-sm font-bold text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 w-full focus:outline-none"
                   />
                 </div>
@@ -169,6 +171,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
               <textarea
                 value={editDescricao}
                 onChange={(e) => setEditDescricao(e.target.value)}
+                maxLength={500}
                 className="w-full text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1.5 focus:outline-none resize-none min-h-[60px]"
                 placeholder="Insira a descrição da equipe..."
               />
@@ -198,6 +201,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                           type="text"
                           value={membro.nome}
                           onChange={(e) => handleMembroChange(idx, "nome", e.target.value)}
+                          maxLength={80}
                           className="text-xs font-semibold text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 focus:outline-none w-1/2"
                           placeholder="Nome"
                         />
@@ -205,6 +209,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                           type="text"
                           value={membro.status}
                           onChange={(e) => handleMembroChange(idx, "status", e.target.value)}
+                          maxLength={50}
                           className="text-[10px] text-sincro-text-secondary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1 focus:outline-none w-1/2"
                           placeholder="Status"
                         />
@@ -248,6 +253,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                       placeholder="Nome do Membro"
                       value={novoMembroNome}
                       onChange={(e) => setNovoMembroNome(e.target.value)}
+                      maxLength={80}
                       className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1.5 w-1/2 focus:outline-none"
                     />
                     <input
@@ -255,6 +261,7 @@ export function EquipeModal({ isOpen, onClose, equipe, onSave, onDelete }: Equip
                       placeholder="Status/Cargo"
                       value={novoMembroStatus}
                       onChange={(e) => setNovoMembroStatus(e.target.value)}
+                      maxLength={50}
                       className="text-xs text-sincro-text-primary bg-sincro-bg-input border border-sincro-border rounded px-2 py-1.5 w-1/2 focus:outline-none"
                     />
                   </div>
@@ -471,6 +478,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: Equipe Dev"
+                maxLength={100}
                 className={`px-4 py-2.5 rounded-xl bg-sincro-bg-input border text-sincro-modal-text focus:outline-none transition-colors ${
                   nomeInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-primary"
                 }`}
@@ -489,6 +497,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
                 value={gestor}
                 onChange={(e) => setGestor(e.target.value)}
                 placeholder="Ex: João Silva"
+                maxLength={80}
                 className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
               />
             </div>
@@ -502,6 +511,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
                 onChange={(e) => setDescricao(e.target.value)}
                 placeholder="Descreva o propósito da equipe..."
                 rows={3}
+                maxLength={500}
                 className="px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors resize-none"
               />
             </div>
@@ -532,6 +542,7 @@ export function CriarEquipeModal({ isOpen, onClose, onCriar }: CriarEquipeModalP
                   onChange={(e) => setNovoMembroNome(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddMembro() } }}
                   placeholder="Nome do membro"
+                  maxLength={80}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-sincro-bg-input border border-sincro-border text-sincro-modal-text focus:outline-none focus:border-sincro-text-primary transition-colors"
                 />
                 <button

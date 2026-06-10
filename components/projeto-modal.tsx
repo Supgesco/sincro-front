@@ -157,6 +157,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     type="text"
                     value={editTitulo}
                     onChange={(e) => setEditTitulo(e.target.value)}
+                    maxLength={100}
                     className="text-2xl font-bold text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2.5 py-1 focus:outline-none w-full"
                     placeholder="Título do Projeto"
                   />
@@ -164,6 +165,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                     type="text"
                     value={editData}
                     onChange={(e) => setEditData(e.target.value)}
+                    maxLength={50}
                     className="text-xs text-sincro-modal-text bg-sincro-bg-input border border-sincro-border rounded px-2 py-0.5 w-40 focus:outline-none"
                     placeholder="Data / Período"
                   />
@@ -269,6 +271,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
                 <textarea
                   value={editDescricao}
                   onChange={(e) => setEditDescricao(e.target.value)}
+                  maxLength={500}
                   className="w-full h-full min-h-[100px] bg-sincro-bg-input border border-sincro-border rounded-xl p-3 text-sm text-sincro-modal-text focus:outline-none resize-none leading-relaxed"
                   placeholder="Descreva o projeto..."
                 />
@@ -393,6 +396,7 @@ export function ProjetoModal({ isOpen, onClose, projeto, onVerTarefas, onMarcarF
               type="text"
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
+              maxLength={500}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleAddComentario()
@@ -516,6 +520,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
                 placeholder="Ex.: Migração para Cloud"
+                maxLength={100}
                 className={`w-full h-11 px-4 rounded-xl border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none transition-colors ${tituloInvalido ? "border-status-red" : "border-sincro-border focus:border-sincro-text-muted"}`}
                 autoFocus
               />
@@ -535,6 +540,7 @@ export function CriarProjetoModal({ isOpen, onClose, onCriar, equipesDisponiveis
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 rows={3}
+                maxLength={500}
                 placeholder="Descreva os objetivos e o escopo do projeto..."
                 className="w-full px-4 py-3 rounded-xl border border-sincro-border bg-sincro-bg-input text-sm text-sincro-text-primary placeholder-sincro-text-muted focus:outline-none focus:border-sincro-text-muted resize-none transition-colors"
               />
