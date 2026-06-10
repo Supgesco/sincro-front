@@ -544,10 +544,17 @@ function TarefasContent() {
                         )}
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${complexidadeCor[tarefa.complexidade] || "border-sincro-border text-sincro-text-primary"
                           }`}>{tarefa.complexidade}</span>
-                        <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {tarefa.dataEntrega}
-                        </span>
+                        {tarefa.dataEntrega === "Sem prazo determinado" ? (
+                          <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-dashed border-sincro-border text-sincro-text-muted">
+                            <Calendar className="w-3 h-3" />
+                            Sem prazo
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-sincro-text-primary font-bold">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {tarefa.dataEntrega}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button

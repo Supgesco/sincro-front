@@ -366,10 +366,17 @@ export function TarefaModal({ isOpen, onClose, tarefa, onAceitar, onIniciar, onF
               </>
             ) : (
               <>
-                <span className="flex items-center gap-1.5 h-7 px-3 rounded-full text-xs border border-sincro-border bg-sincro-modal-sidebar text-sincro-modal-text">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {tarefa.dataEntrega}
-                </span>
+                {tarefa.dataEntrega === "Sem prazo determinado" ? (
+                  <span className="flex items-center h-7 px-3 rounded-full text-xs border border-dashed border-sincro-border text-sincro-text-muted">
+                    <Calendar className="w-3.5 h-3.5 mr-1" />
+                    Sem prazo
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 h-7 px-3 rounded-full text-xs border border-sincro-border bg-sincro-modal-sidebar text-sincro-modal-text">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {tarefa.dataEntrega}
+                  </span>
+                )}
                 {statusEfetivo === "Em Atraso" && (
                   <span className="flex items-center h-7 px-3 rounded-full text-xs bg-status-red text-white font-semibold">
                     Em Atraso
@@ -960,7 +967,7 @@ export function CriarTarefaModal({ isOpen, onClose, onCriar }: CriarTarefaModalP
 
               <div className="flex flex-col gap-1.5 pt-2 border-t border-sincro-border">
                 <PreviewRowTarefa icon={Flag} label="Projeto" value={projeto} />
-                <PreviewRowTarefa icon={Calendar} label="Entrega" value={formatarDataBR(dataEntrega) || "Sem prazo determinado"} />
+                <PreviewRowTarefa icon={Calendar} label="Entrega" value={!dataEntrega || dataEntrega === "Sem prazo determinado" ? "Sem prazo" : formatarDataBR(dataEntrega)} />
                 <PreviewRowTarefa
                   icon={Sparkles}
                   label="Complexidade"
