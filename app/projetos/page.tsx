@@ -268,10 +268,6 @@ export default function ProjetosPage() {
     saveProjetosStorage(projetos)
   }, [projetos])
 
-  const totalProjetos = projetos.length
-  const projetosAtivos = projetos.filter(p => p.status === "Em Andamento").length
-  const projetosAtraso = projetos.filter(p => p.status === "Em Atraso").length
-
   const complexidadeDoProjeto = (c: number) => {
     if (c <= 3) return "Baixa"
     if (c <= 6) return "Média"
@@ -288,6 +284,10 @@ export default function ProjetosPage() {
     const matchSetor = setorFilter.length === 0 || setorFilter.includes(projetoSetor)
     return matchSearch && matchEquipe && matchStatus && matchComplexidade && matchUrgente && matchSetor
   })
+
+  const totalProjetos = filteredProjetos.length
+  const projetosAtivos = filteredProjetos.filter(p => p.status === "Em Andamento").length
+  const projetosAtraso = filteredProjetos.filter(p => p.status === "Em Atraso").length
 
   return (
     <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
@@ -311,7 +311,7 @@ export default function ProjetosPage() {
             />
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0 space-y-0">
+          <div className="flex-1 flex flex-col space-y-6 min-h-0">
             <div className="flex items-center gap-4 px-3 py-6 border border-sincro-border rounded-2xl bg-sincro-team-card flex-wrap shrink-0">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-sincro-border flex-1 min-w-[200px] max-w-xs bg-white/5">
                 <Search className="w-4 h-4 opacity-50" />

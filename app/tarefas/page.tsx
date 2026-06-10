@@ -343,18 +343,6 @@ function TarefasContent() {
     return t.status
   }
 
-  const totalTarefas = tarefas.length
-  const tarefasConcluidas = tarefas.filter(t => getStatusEfetivo(t) === "Finalizado").length
-  const tarefasProgresso = tarefas.filter(t => getStatusEfetivo(t) === "Em Andamento").length
-  const tarefasPendentes = tarefas.filter(t => {
-    const s = getStatusEfetivo(t)
-    return s === "Não Iniciado" || s === "Em Atraso"
-  }).length
-
-  const pctConcluidas = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0
-  const pctProgresso = totalTarefas > 0 ? (tarefasProgresso / totalTarefas) * 100 : 0
-  const pctPendentes = totalTarefas > 0 ? (tarefasPendentes / totalTarefas) * 100 : 0
-
   const filteredTarefas = tarefas.filter(t => {
     const statusEfetivo = getStatusEfetivo(t)
     const matchSearch = t.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -367,6 +355,18 @@ function TarefasContent() {
     const matchSetor = setorFilter.length === 0 || setorFilter.includes(tarefaSetor)
     return matchSearch && matchProject && matchEquipe && matchStatus && matchComplexidade && matchUrgente && matchSetor
   })
+
+  const totalTarefas = filteredTarefas.length
+  const tarefasConcluidas = filteredTarefas.filter(t => getStatusEfetivo(t) === "Finalizado").length
+  const tarefasProgresso = filteredTarefas.filter(t => getStatusEfetivo(t) === "Em Andamento").length
+  const tarefasPendentes = filteredTarefas.filter(t => {
+    const s = getStatusEfetivo(t)
+    return s === "Não Iniciado" || s === "Em Atraso"
+  }).length
+
+  const pctConcluidas = totalTarefas > 0 ? (tarefasConcluidas / totalTarefas) * 100 : 0
+  const pctProgresso = totalTarefas > 0 ? (tarefasProgresso / totalTarefas) * 100 : 0
+  const pctPendentes = totalTarefas > 0 ? (tarefasPendentes / totalTarefas) * 100 : 0
 
   return (
     <div className="h-screen overflow-hidden bg-sincro-bg text-sincro-text-primary flex flex-col">
