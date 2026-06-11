@@ -1065,7 +1065,7 @@ export default function DashboardPage() {
           className="w-[min(450px,92vw)] rounded-2xl overflow-hidden"
         >
           <div className="bg-sincro-modal-bg dark:bg-sincro-dark-gradient text-sincro-modal-text">
-            <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-sincro-border">
+            <div className="px-6 pt-4 pb-3 border-b border-sincro-border">
               <div className="flex items-center gap-2">
                 <span className="w-9 h-9 rounded-full flex items-center justify-center bg-status-cyan-bg text-status-cyan">
                   <Calendar className="w-4 h-4" />
@@ -1075,14 +1075,6 @@ export default function DashboardPage() {
                   <p className="text-xs text-sincro-text-secondary">Selecione a data e o tipo de item</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowCalendarModal(false)}
-                className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                aria-label="Fechar"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
             <div className="px-6 py-5 flex flex-col gap-4">
               <div>
