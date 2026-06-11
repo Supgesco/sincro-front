@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
@@ -21,13 +20,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-sincro-bg text-sincro-text-primary flex items-center justify-center p-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-3">
-          <Image
+          <img
             src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
             alt="Sincro"
-            width={160}
-            height={48}
             className="h-12 w-auto"
-            priority
           />
           <h1 className="text-2xl font-extrabold text-center">Entrar na Plataforma</h1>
           <p className="text-sm text-sincro-text-secondary text-center">
